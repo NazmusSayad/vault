@@ -1,6 +1,6 @@
 import '@/styles/index.css'
 
-import { Providers } from '@/app/providers'
+import { Providers } from '@/lib/providers'
 import { cn } from '@/lib/utils'
 import { Metadata } from 'next'
 import { Fira_Code, Inter } from 'next/font/google'
