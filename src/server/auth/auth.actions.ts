@@ -10,6 +10,7 @@ import {
   getEmailVerificationAuthenticationOptionsFromMetadata,
   getPasswordAuthenticationOptionsFromMetadata,
   getPendingAuthState,
+  getProviderAuthorizationUrl,
   workos,
 } from '@/server/auth/auth'
 import { z } from 'zod'
@@ -38,6 +39,8 @@ const resetPasswordSchema = z.object({
   token: z.string().trim().min(1, 'This reset link is missing its token.'),
 })
 
+const socialProviderSchema = z.enum(['GitHubOAuth', 'GoogleOAuth'])
+
 export type SessionUser = {
   appUserId: string
   authenticationMethod: string | null
@@ -46,6 +49,10 @@ export type SessionUser = {
   lastSignInAt: string | null
   name: string
   workosUserId: string
+}
+
+export type SocialAuthUrlResult = {
+  url: string
 }
 
 function serializeSessionUser(
@@ -71,6 +78,14 @@ export async function getSessionAction() {
 
   return {
     user: currentUser ? serializeSessionUser(currentUser) : null,
+  }
+}
+
+export async function getSocialAuthUrlAction(
+  provider: z.infer<typeof socialProviderSchema>
+): Promise<SocialAuthUrlResult> {
+  return {
+    url: getProviderAuthorizationUrl(socialProviderSchema.parse(provider)),
   }
 }
 

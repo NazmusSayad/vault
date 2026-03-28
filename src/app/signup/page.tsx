@@ -3,7 +3,12 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { queryClient } from '@/lib/query-client'
-import { signUpAction, verifyEmailAction } from '@/server/auth/auth.actions'
+import {
+  type SocialAuthUrlResult,
+  getSocialAuthUrlAction,
+  signUpAction,
+  verifyEmailAction,
+} from '@/server/auth/auth.actions'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -61,6 +66,14 @@ export default function SignupPage() {
         pendingEmail:
           'pendingEmail' in result ? result.pendingEmail : undefined,
       })
+    },
+  })
+  const socialAuthMutation = useMutation({
+    mutationFn: (provider: 'GitHubOAuth' | 'GoogleOAuth') =>
+      getSocialAuthUrlAction(provider),
+    onSuccess: (result: SocialAuthUrlResult) => {
+      const { url } = result
+      window.location.assign(url)
     },
   })
 
@@ -187,21 +200,47 @@ export default function SignupPage() {
           </div>
 
           <div className="mt-6 flex items-center justify-center gap-4">
-            <a
-              href="/auth/sign-in/github"
+            <button
+              type="button"
               aria-label="Continue with GitHub"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
+              disabled={socialAuthMutation.isPending}
+              onClick={() => {
+                socialAuthMutation.mutate('GitHubOAuth', {
+                  onError: (error) => {
+                    setFeedback({
+                      error:
+                        error instanceof Error
+                          ? error.message
+                          : 'Could not start GitHub sign up.',
+                    })
+                  },
+                })
+              }}
             >
               <HugeiconsIcon icon={GithubIcon} size={20} />
-            </a>
+            </button>
 
-            <a
-              href="/auth/sign-in/google"
+            <button
+              type="button"
               aria-label="Continue with Google"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
+              disabled={socialAuthMutation.isPending}
+              onClick={() => {
+                socialAuthMutation.mutate('GoogleOAuth', {
+                  onError: (error) => {
+                    setFeedback({
+                      error:
+                        error instanceof Error
+                          ? error.message
+                          : 'Could not start Google sign up.',
+                    })
+                  },
+                })
+              }}
             >
               <HugeiconsIcon icon={GoogleIcon} size={20} />
-            </a>
+            </button>
           </div>
 
           <p className="text-muted-foreground mt-8 text-sm">
