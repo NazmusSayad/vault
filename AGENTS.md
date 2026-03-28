@@ -7,6 +7,7 @@
 
 - Do not use `lucide-icons` for icons. Use `hugeicons` instead.
 - Do not put "..." to indicate loading state. Use a spinner or skeleton instead.
+- Must use `better-dialog` for all dialogs and modals. Use the `dialog` skill when needed.
 
 ## Tailwind Theme
 
