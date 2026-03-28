@@ -44,7 +44,7 @@ function VaultCreateDialogContent({
   const router = useRouter()
   const [icon, setIcon] = useState('')
   const [name, setName] = useState('')
-  const [testAuth, setTestAuth] = useState('')
+  const [testAuthHash, settestAuthHash] = useState('')
   const [error, setError] = useState('')
   const createVaultMutation = useMutation({
     mutationFn: createVaultAction,
@@ -81,7 +81,7 @@ function VaultCreateDialogContent({
             {
               icon,
               name,
-              testAuth,
+              testAuthHash,
             },
             {
               onError: (mutationError) => {
@@ -114,8 +114,8 @@ function VaultCreateDialogContent({
           <Input
             id="vault-test-auth"
             placeholder="staging-master-key"
-            value={testAuth}
-            onChange={(event) => setTestAuth(event.target.value)}
+            value={testAuthHash}
+            onChange={(event) => settestAuthHash(event.target.value)}
           />
         </div>
 

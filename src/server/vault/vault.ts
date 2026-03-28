@@ -11,7 +11,7 @@ const getVaultSchema = z.object({
 const createVaultSchema = z.object({
   icon: z.string().trim().optional(),
   name: z.string().trim().min(1, 'Enter a vault name.'),
-  testAuth: z.string().trim().min(1, 'Enter a vault test auth value.'),
+  testAuthHash: z.string().trim().min(1, 'Enter a vault test auth value.'),
 })
 
 function serializeVault(vault: {
@@ -20,7 +20,7 @@ function serializeVault(vault: {
   updatedAt: Date
   name: string
   icon: string | null
-  testAuth: string
+  testAuthHash: string
   lastAccessedAt: Date | null
   _count?: {
     vaultRecords: number
@@ -32,7 +32,7 @@ function serializeVault(vault: {
     updatedAt: vault.updatedAt.toISOString(),
     name: vault.name,
     icon: vault.icon,
-    testAuth: vault.testAuth,
+    testAuthHash: vault.testAuthHash,
     lastAccessedAt: vault.lastAccessedAt?.toISOString() ?? null,
     recordCount: vault._count?.vaultRecords ?? 0,
   }
@@ -95,7 +95,7 @@ export async function createVaultAction(
       icon: body.icon || null,
       name: body.name,
       ownerId: user.id,
-      testAuth: body.testAuth,
+      testAuthHash: body.testAuthHash,
     },
     include: {
       _count: {

@@ -1,10 +1,9 @@
-type Options = {
+type EncryptionOptions = {
   key: string
   data: string
-  algorithm: string
 }
 
 export interface EncryptionInterface {
-  encrypt(options: Options): Promise<string>
-  decrypt(options: Options): Promise<string>
+  encrypt(options: EncryptionOptions): Promise<string>
+  decrypt(options: EncryptionOptions): Promise<string>
 }
