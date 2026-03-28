@@ -1,7 +1,7 @@
 'use client'
 
 import { queryClient } from '@/lib/query-client'
-import { getSessionAction } from '@/server/auth/auth.actions'
+import { getSessionAction } from '@/server/auth/session.actions'
 import { useAuthStore } from '@/store/use-auth-store'
 import { QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'

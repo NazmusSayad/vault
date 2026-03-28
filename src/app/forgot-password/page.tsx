@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { forgotPasswordAction } from '@/server/auth/auth.actions'
+import { forgotPasswordAction } from '@/server/auth/password-reset.actions'
 import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'

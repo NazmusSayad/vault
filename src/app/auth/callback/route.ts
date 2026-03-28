@@ -1,11 +1,11 @@
+import { getErrorDetails } from '@/server/auth/auth-helpers'
+import { createAuthenticationSuccessResponse } from '@/server/auth/session'
 import {
-  createAuthenticationErrorResponse,
-  createAuthenticationSuccessResponse,
-  getCodeAuthenticationOptions,
   getEmailVerificationAuthenticationOptions,
   workos,
-} from '@/server/auth/auth'
-import { getErrorDetails } from '@/server/auth/auth-helpers'
+} from '@/server/auth/shared'
+import { authenticateWithCode } from '@/server/auth/social'
+import { createAuthenticationErrorResponse } from '@/server/auth/verification'
 import { NextResponse } from 'next/server'
 
 function getCallbackErrorMessage(
@@ -42,11 +42,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const authentication = await workos.userManagement.authenticateWithCode(
-      getCodeAuthenticationOptions(request, code)
-    )
+    const authentication = await authenticateWithCode(request, code)
 
-    return createAuthenticationSuccessResponse(authentication)
+    return createAuthenticationSuccessResponse(authentication.user)
   } catch (error) {
     const { code: errorCode, rawData } = getErrorDetails(error)
 
@@ -73,7 +71,7 @@ export async function GET(request: Request) {
             )
           )
 
-        return createAuthenticationSuccessResponse(authentication)
+        return createAuthenticationSuccessResponse(authentication.user)
       }
 
       const email = typeof rawData.email === 'string' ? rawData.email : null
@@ -89,12 +87,9 @@ export async function GET(request: Request) {
           })
 
           try {
-            const authentication =
-              await workos.userManagement.authenticateWithCode(
-                getCodeAuthenticationOptions(request, code)
-              )
+            const authentication = await authenticateWithCode(request, code)
 
-            return createAuthenticationSuccessResponse(authentication)
+            return createAuthenticationSuccessResponse(authentication.user)
           } catch {}
         }
       }

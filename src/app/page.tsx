@@ -3,21 +3,10 @@
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { queryClient } from '@/lib/query-client'
-import { signOutAction } from '@/server/auth/auth.actions'
+import { signOutAction } from '@/server/auth/session.actions'
 import { useAuthStore } from '@/store/use-auth-store'
 import { useMutation } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return 'Not yet recorded'
-  }
-
-  return new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -53,21 +42,13 @@ export default function Page() {
               <h1 className="text-3xl font-semibold tracking-tight">
                 {user.name}
               </h1>
-              <p className="text-muted-foreground text-sm">{user.email}</p>
+              <p className="text-muted-foreground text-sm">Signed in</p>
             </div>
 
-            <div className="mt-6 space-y-3 text-sm">
+            <div className="mt-6 text-sm">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Verified</span>
-                <span>{user.emailVerified ? 'Yes' : 'No'}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Method</span>
-                <span>{user.authenticationMethod ?? 'WorkOS'}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Last sign-in</span>
-                <span>{formatDate(user.lastSignInAt)}</span>
+                <span>{user.userVerified ? 'Yes' : 'No'}</span>
               </div>
             </div>
 

@@ -3,12 +3,9 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { queryClient } from '@/lib/query-client'
-import {
-  type SocialAuthUrlResult,
-  getSocialAuthUrlAction,
-  signUpAction,
-  verifyEmailAction,
-} from '@/server/auth/auth.actions'
+import { signUpAction } from '@/server/auth/sign-up.actions'
+import { getSocialAuthUrlAction } from '@/server/auth/social.actions'
+import { verifyEmailAction } from '@/server/auth/verification.actions'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -71,7 +68,7 @@ export default function SignupPage() {
   const socialAuthMutation = useMutation({
     mutationFn: (provider: 'GitHubOAuth' | 'GoogleOAuth') =>
       getSocialAuthUrlAction(provider),
-    onSuccess: (result: SocialAuthUrlResult) => {
+    onSuccess: (result) => {
       const { url } = result
       window.location.assign(url)
     },
