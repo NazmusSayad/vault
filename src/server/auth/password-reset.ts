@@ -64,7 +64,7 @@ export async function resetPasswordAction(
 
   return {
     redirectTo:
-      '/login?notice=Your%20password%20has%20been%20reset.%20Sign%20in%20with%20your%20new%20password.',
+      '/auth/login?notice=Your%20password%20has%20been%20reset.%20Sign%20in%20with%20your%20new%20password.',
     success: true,
   }
 }

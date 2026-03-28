@@ -97,10 +97,10 @@ export default function Page() {
 
           <div className="mt-6 flex flex-col gap-3">
             <Button asChild className="w-full">
-              <a href="/login">Login</a>
+              <a href="/auth/login">Login</a>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <a href="/signup">Sign up</a>
+              <a href="/auth/signup">Sign up</a>
             </Button>
           </div>
         </div>

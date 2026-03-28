@@ -190,7 +190,7 @@ export default function LoginPage() {
 
           <div className="mt-4">
             <Link
-              href="/forgot-password"
+              href="/auth/forgot-password"
               className="text-primary text-sm underline-offset-4 hover:underline"
             >
               Forgot password?
@@ -250,7 +250,7 @@ export default function LoginPage() {
           <p className="text-muted-foreground mt-8 text-sm">
             Need an account?{' '}
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="text-primary underline-offset-4 hover:underline"
             >
               Sign up

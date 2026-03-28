@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
 
           <div className="mt-6">
             <Link
-              href="/login"
+              href="/auth/login"
               className="text-primary text-sm underline-offset-4 hover:underline"
             >
               Back to sign in

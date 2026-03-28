@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   if (error || errorDescription) {
     return NextResponse.redirect(
       new URL(
-        `/login?error=${encodeURIComponent(
+        `/auth/login?error=${encodeURIComponent(
           getCallbackErrorMessage(error, errorDescription)
         )}`,
         request.url
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   if (!code) {
     return NextResponse.redirect(
       new URL(
-        '/login?error=WorkOS%20did%20not%20return%20an%20authorization%20code.',
+        '/auth/login?error=WorkOS%20did%20not%20return%20an%20authorization%20code.',
         request.url
       )
     )
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     }
 
     return createAuthenticationErrorResponse(error, 'sign-in', {
-      pathname: '/login',
+      pathname: '/auth/login',
     })
   }
 }
