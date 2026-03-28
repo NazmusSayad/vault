@@ -13,4 +13,5 @@
 
 ## React
 
+- DO NOT USE `useActionState` form `react`.
 - DO NOT USE `useEffect` unless instructed to do so. If there is no way possible, ask the user what to do instead.
