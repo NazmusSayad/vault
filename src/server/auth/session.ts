@@ -170,6 +170,16 @@ async function getCurrentSessionUser() {
   return serializeSessionUser(appUser)
 }
 
+export async function requireCurrentSessionUser() {
+  const user = await getCurrentSessionUser()
+
+  if (!user) {
+    throw new Error('You must sign in to continue.')
+  }
+
+  return user
+}
+
 export async function getSessionAction() {
   return {
     user: await getCurrentSessionUser(),
