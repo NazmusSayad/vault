@@ -1,6 +1,6 @@
 import { ComponentProps } from 'react'
 
-export function Loader({ ...props }: ComponentProps<'svg'>) {
+export function Loading({ ...props }: ComponentProps<'svg'>) {
   return (
     <>
       <svg
@@ -60,5 +60,21 @@ export function Loader({ ...props }: ComponentProps<'svg'>) {
         />
       </svg>
     </>
+  )
+}
+
+export function LoadingPage() {
+  return (
+    <main className="flex min-h-screen items-center justify-center">
+      <Loading className="text-primary size-[clamp(5rem,10vw,10rem)] shrink-0" />
+    </main>
+  )
+}
+
+export function LoadingSection() {
+  return (
+    <div className="flex min-h-200 w-full items-center justify-center">
+      <Loading className="text-primary size-[clamp(5rem,10vw,10rem)] shrink-0" />
+    </div>
   )
 }
