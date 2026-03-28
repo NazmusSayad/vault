@@ -16,5 +16,5 @@ export function PrivateLayout({ children }: PropsWithChildren) {
     return children
   }
 
-  redirect('/auth/sign-in')
+  redirect('/auth/login')
 }
