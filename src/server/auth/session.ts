@@ -11,7 +11,7 @@ import {
   setResponseSessionCookie,
   setSessionCookie,
 } from '@/server/auth/auth-state'
-import { getAbsoluteUrl, getSafeReturnTo } from '@/server/auth/shared'
+import { getAbsoluteUrl } from '@/server/auth/shared'
 import type { SessionUser } from '@/server/auth/types'
 import type { User } from '@workos-inc/node'
 import { SignJWT, jwtVerify } from 'jose'
@@ -67,12 +67,6 @@ async function verifySessionToken() {
   }
 }
 
-function getNameOverride(name?: string) {
-  const trimmedName = name?.trim()
-
-  return trimmedName ? trimmedName : undefined
-}
-
 function isPasswordChangeNewerThanToken(
   appUser: {
     passwordChangedAt: Date | null
@@ -94,7 +88,7 @@ async function syncAppUser(workosUser: User, options?: { name?: string }) {
   if (!existingUser) {
     return prisma.user.create({
       data: {
-        name: getNameOverride(options?.name) ?? getDefaultName(workosUser),
+        name: options?.name?.trim() || getDefaultName(workosUser),
         userVerified: workosUser.emailVerified,
         workosUserId: workosUser.id,
       },
@@ -136,24 +130,13 @@ export async function createAuthenticationSuccessResponse(
 ) {
   const appUser = await syncAppUser(workosUser, options)
   const response = NextResponse.redirect(
-    getAbsoluteUrl(getSafeReturnTo(options?.returnTo ?? '/'))
+    getAbsoluteUrl(options?.returnTo?.startsWith('/') ? options.returnTo : '/')
   )
 
   clearResponsePendingAuthCookie(response)
   setResponseSessionCookie(response, await createSessionToken(appUser.id))
 
   return response
-}
-
-export async function markPasswordChanged(workosUser: User) {
-  const appUser = await syncAppUser(workosUser)
-
-  await prisma.user.update({
-    where: { id: appUser.id },
-    data: {
-      passwordChangedAt: new Date(),
-    },
-  })
 }
 
 async function getCurrentSessionUser() {

@@ -1,10 +1,10 @@
-import { getErrorDetails } from '@/server/auth/auth-helpers'
-import { createAuthenticationSuccessResponse } from '@/server/auth/session'
+import { serverEnv } from '@/env.server'
 import {
-  getCodeAuthenticationOptions,
-  getEmailVerificationAuthenticationOptions,
-  workos,
-} from '@/server/auth/shared'
+  getErrorDetails,
+  getRequestMetadataFromHeaders,
+} from '@/server/auth/auth-helpers'
+import { createAuthenticationSuccessResponse } from '@/server/auth/session'
+import { getCodeAuthenticationOptions, workos } from '@/server/auth/shared'
 import { createAuthenticationErrorResponse } from '@/server/auth/verification'
 import { NextResponse } from 'next/server'
 
@@ -63,15 +63,16 @@ export async function GET(request: Request) {
       if (emailVerificationId && pendingAuthenticationToken) {
         const emailVerification =
           await workos.userManagement.getEmailVerification(emailVerificationId)
+        const requestMetadata = getRequestMetadataFromHeaders(request.headers)
 
         const authentication =
-          await workos.userManagement.authenticateWithEmailVerification(
-            getEmailVerificationAuthenticationOptions(
-              request,
-              emailVerification.code,
-              pendingAuthenticationToken
-            )
-          )
+          await workos.userManagement.authenticateWithEmailVerification({
+            clientId: serverEnv.WORKOS_CLIENT_ID,
+            code: emailVerification.code,
+            ipAddress: requestMetadata.ipAddress,
+            pendingAuthenticationToken,
+            userAgent: requestMetadata.userAgent,
+          })
 
         return createAuthenticationSuccessResponse(authentication.user)
       }

@@ -9,24 +9,8 @@ export const workos = new WorkOS(serverEnv.WORKOS_API_KEY, {
   clientId: serverEnv.WORKOS_CLIENT_ID,
 })
 
-function getCallbackUrl() {
-  return getAbsoluteUrl('/auth/callback').toString()
-}
-
 export function getAbsoluteUrl(pathname = '/') {
   return new URL(pathname, serverEnv.APP_URL)
-}
-
-export function getSafeReturnTo(value?: string | null) {
-  if (!value?.startsWith('/')) {
-    return '/'
-  }
-
-  return value
-}
-
-export function getRequestMetadata(request: Request) {
-  return getRequestMetadataFromHeaders(request.headers)
 }
 
 export async function getCurrentRequestMetadata() {
@@ -51,7 +35,7 @@ export function getPasswordAuthenticationOptions(
 }
 
 export function getCodeAuthenticationOptions(request: Request, code: string) {
-  const requestMetadata = getRequestMetadata(request)
+  const requestMetadata = getRequestMetadataFromHeaders(request.headers)
 
   return {
     clientId: serverEnv.WORKOS_CLIENT_ID,
@@ -59,45 +43,4 @@ export function getCodeAuthenticationOptions(request: Request, code: string) {
     ipAddress: requestMetadata.ipAddress,
     userAgent: requestMetadata.userAgent,
   }
-}
-
-export function getEmailVerificationAuthenticationOptions(
-  request: Request,
-  code: string,
-  pendingAuthenticationToken: string
-) {
-  const requestMetadata = getRequestMetadata(request)
-
-  return {
-    clientId: serverEnv.WORKOS_CLIENT_ID,
-    code,
-    ipAddress: requestMetadata.ipAddress,
-    pendingAuthenticationToken,
-    userAgent: requestMetadata.userAgent,
-  }
-}
-
-export function getEmailVerificationAuthenticationOptionsFromMetadata(
-  requestMetadata: {
-    ipAddress?: string
-    userAgent?: string
-  },
-  code: string,
-  pendingAuthenticationToken: string
-) {
-  return {
-    clientId: serverEnv.WORKOS_CLIENT_ID,
-    code,
-    ipAddress: requestMetadata.ipAddress,
-    pendingAuthenticationToken,
-    userAgent: requestMetadata.userAgent,
-  }
-}
-
-export function getSocialAuthUrl(provider: 'GitHubOAuth' | 'GoogleOAuth') {
-  return workos.userManagement.getAuthorizationUrl({
-    clientId: serverEnv.WORKOS_CLIENT_ID,
-    provider,
-    redirectUri: getCallbackUrl(),
-  })
 }
