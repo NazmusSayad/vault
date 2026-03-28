@@ -16,7 +16,8 @@ model User {
   isVerified    Boolean  @default(false)
   authChangedAt DateTime @default(now())
 
-  name String
+  name      String
+  avatarUrl String?
 
   vaults Vault[]
 }
