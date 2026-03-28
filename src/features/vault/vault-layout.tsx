@@ -1,10 +1,10 @@
 import { PropsWithChildren } from 'react'
-import { VaultSidebar } from './vault-sidebar'
+import { VaultSidebarDesktop } from './vault-sidebar-desktop'
 
 export function VaultLayout({ children }: PropsWithChildren) {
   return (
     <main className="grid min-h-full grid-cols-[auto_1fr]">
-      <VaultSidebar />
+      <VaultSidebarDesktop />
 
       <div>{children}</div>
     </main>
