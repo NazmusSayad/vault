@@ -5,6 +5,7 @@
     "start": "next start",
     "build": "pnpm run db:init && next build",
     "db:init": "prisma generate && prisma db push",
+    "db:init-force": "prisma generate && prisma db push --force-reset",
     "db:studio": "prisma studio",
     "prepare": "husky",
     "lint": "tsc --noEmit && eslint .",

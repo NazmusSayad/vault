@@ -49,11 +49,11 @@ export async function resetPasswordAction(
 
     await prisma.user.update({
       where: {
-        workosUserId: user.id,
+        workosId: user.id,
       },
       data: {
         passwordChangedAt: new Date(),
-        userVerified: user.emailVerified,
+        isVerified: user.emailVerified,
       },
     })
   } catch (error) {

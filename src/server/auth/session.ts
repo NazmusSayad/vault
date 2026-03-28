@@ -24,12 +24,12 @@ const jwtSecret = new TextEncoder().encode(serverEnv.APP_SESSION_SECRET)
 function serializeSessionUser(appUser: {
   id: string
   name: string
-  userVerified: boolean
+  isVerified: boolean
 }) {
   return {
     id: appUser.id,
     name: appUser.name,
-    userVerified: appUser.userVerified,
+    isVerified: appUser.isVerified,
   } satisfies SessionUser
 }
 
@@ -82,27 +82,27 @@ function isPasswordChangeNewerThanToken(
 
 async function syncAppUser(workosUser: User, options?: { name?: string }) {
   const existingUser = await prisma.user.findUnique({
-    where: { workosUserId: workosUser.id },
+    where: { workosId: workosUser.id },
   })
 
   if (!existingUser) {
     return prisma.user.create({
       data: {
         name: options?.name?.trim() || getDefaultName(workosUser),
-        userVerified: workosUser.emailVerified,
-        workosUserId: workosUser.id,
+        isVerified: workosUser.emailVerified,
+        workosId: workosUser.id,
       },
     })
   }
 
-  if (existingUser.userVerified === workosUser.emailVerified) {
+  if (existingUser.isVerified === workosUser.emailVerified) {
     return existingUser
   }
 
   return prisma.user.update({
     where: { id: existingUser.id },
     data: {
-      userVerified: workosUser.emailVerified,
+      isVerified: workosUser.emailVerified,
     },
   })
 }

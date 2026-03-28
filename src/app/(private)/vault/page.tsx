@@ -48,7 +48,7 @@ export default function Page() {
             <div className="mt-6 text-sm">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Verified</span>
-                <span>{user.userVerified ? 'Yes' : 'No'}</span>
+                <span>{user.isVerified ? 'Yes' : 'No'}</span>
               </div>
             </div>
 
