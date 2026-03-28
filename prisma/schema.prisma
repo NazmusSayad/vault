@@ -40,9 +40,16 @@ model VaultRecord {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  name String
+  type RecordType
+  data Json /* Array<{ key: value }> */
+
   vaultId String
   vault   Vault  @relation(fields: [vaultId], references: [id])
+}
 
-  key   String
-  value String
+enum RecordType {
+  PASSWORD
+  API_KEY
+  NOTE
 }
