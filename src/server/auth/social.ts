@@ -13,7 +13,7 @@ export async function getSocialAuthUrlAction(
     url: workos.userManagement.getAuthorizationUrl({
       clientId: serverEnv.WORKOS_CLIENT_ID,
       provider: socialProviderSchema.parse(provider),
-      redirectUri: getAbsoluteUrl('/auth/callback').toString(),
+      redirectUri: getAbsoluteUrl('/workos').toString(),
     }),
   }
 }
