@@ -85,9 +85,12 @@ async function syncAppUser(workosUser: User, options?: { name?: string }) {
     where: { workosId: workosUser.id },
   })
 
+  const profilePictureUrl = workosUser.profilePictureUrl?.trim()
+
   if (!existingUser) {
     return prisma.user.create({
       data: {
+        avatarUrl: profilePictureUrl,
         name: options?.name?.trim() || getDefaultName(workosUser),
         isVerified: workosUser.emailVerified,
         workosId: workosUser.id,
@@ -95,13 +98,17 @@ async function syncAppUser(workosUser: User, options?: { name?: string }) {
     })
   }
 
-  if (existingUser.isVerified === workosUser.emailVerified) {
+  if (
+    existingUser.isVerified === workosUser.emailVerified &&
+    (existingUser.avatarUrl || !profilePictureUrl)
+  ) {
     return existingUser
   }
 
   return prisma.user.update({
     where: { id: existingUser.id },
     data: {
+      avatarUrl: existingUser.avatarUrl || profilePictureUrl,
       isVerified: workosUser.emailVerified,
     },
   })
