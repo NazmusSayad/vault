@@ -24,7 +24,17 @@ export const useAuthStore = create(
     })
   )
 )
-
+/**
+ * @throws {Error} If the user is not authenticated, an error is thrown.
+ * @return {SessionUser} The authenticated user.
+ *
+ * This should be used when you are sure that the user is authenticated.
+ */
 export function useAuthenticatedUser() {
-  return useAuthStore((state) => state.user)!
+  const user = useAuthStore((state) => state.user)
+  if (!user) {
+    throw new Error('User is not authenticated')
+  }
+
+  return user
 }
