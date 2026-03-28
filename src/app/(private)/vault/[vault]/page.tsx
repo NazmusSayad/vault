@@ -1,3 +1,3 @@
-export function Page() {
-  return <div>page</div>
-}
+import { VaultRecordsPage } from '@/features/vault/vault-records-page'
+
+export default VaultRecordsPage
