@@ -27,8 +27,9 @@ model Vault {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name     String
-  testAuth String
+  name           String
+  testAuth       String
+  lastAccessedAt DateTime @default(now())
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
