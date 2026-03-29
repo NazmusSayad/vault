@@ -1,11 +1,13 @@
 ## Project
 
 - NEVER start a dev server (`npm run dev`) or build the project (`npm run build`). The user will do that themselves.
+- Use next dynamic imports with `ssr: false` for all ui components inside `src/app/(private)` to prevent hydration errors. It's kind of a dashboard so no need for server side rendering.
 
 ## UI/UX
 
 - Do not use `lucide-icons` for icons. Use `hugeicons` instead.
 - Do not put "..." to indicate loading state. Use a spinner or skeleton instead.
+- Must use `better-dialog` for all dialogs and modals. Use the `dialog` skill when needed.
 
 ## Tailwind Theme
 

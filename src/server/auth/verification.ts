@@ -1,5 +1,6 @@
-import 'server-only'
+'use server'
 
+import { serverEnv } from '@/env.server'
 import {
   getErrorDetails,
   getFriendlyAuthErrorMessage,
@@ -14,7 +15,6 @@ import { createSessionUser } from '@/server/auth/session'
 import {
   getAbsoluteUrl,
   getCurrentRequestMetadata,
-  getEmailVerificationAuthenticationOptionsFromMetadata,
   workos,
 } from '@/server/auth/shared'
 import type { AuthFeedback } from '@/server/auth/types'
@@ -63,7 +63,7 @@ export async function getAuthFeedbackFromError(
   } satisfies AuthFeedback
 }
 
-async function getAuthenticationErrorRedirectPath(
+export async function createAuthenticationErrorResponse(
   error: unknown,
   mode:
     | 'forgot-password'
@@ -81,49 +81,35 @@ async function getAuthenticationErrorRedirectPath(
   })
   const pathname = options?.pathname ?? '/'
 
-  if (feedback.pendingEmail) {
-    return getPathnameWithSearch(
-      pathname,
-      new URLSearchParams({
-        mode: 'verify-email',
-        notice:
-          feedback.notice ??
-          'Enter the verification code that WorkOS emailed you.',
-        pendingEmail: feedback.pendingEmail,
-      })
-    )
-  }
-
-  return getPathnameWithSearch(
-    pathname,
-    new URLSearchParams({
-      error: feedback.error ?? 'Something went wrong while talking to WorkOS.',
-      mode,
-    })
-  )
-}
-
-export async function createAuthenticationErrorResponse(
-  error: unknown,
-  mode:
-    | 'forgot-password'
-    | 'reset-password'
-    | 'sign-in'
-    | 'sign-up'
-    | 'verify-email',
-  options?: {
-    name?: string
-    pathname?: string
-  }
-) {
   return NextResponse.redirect(
     getAbsoluteUrl(
-      await getAuthenticationErrorRedirectPath(error, mode, options)
+      feedback.pendingEmail
+        ? getPathnameWithSearch(
+            pathname,
+            new URLSearchParams({
+              mode: 'verify-email',
+              notice:
+                feedback.notice ??
+                'Enter the verification code that WorkOS emailed you.',
+              pendingEmail: feedback.pendingEmail,
+            })
+          )
+        : getPathnameWithSearch(
+            pathname,
+            new URLSearchParams({
+              error:
+                feedback.error ??
+                'Something went wrong while talking to WorkOS.',
+              mode,
+            })
+          )
     )
   )
 }
 
-export async function verifyEmail(input: z.infer<typeof verifyEmailSchema>) {
+export async function verifyEmailAction(
+  input: z.infer<typeof verifyEmailSchema>
+) {
   const body = verifyEmailSchema.parse(input)
   const pendingAuthState = await getPendingAuthState()
 
@@ -132,14 +118,15 @@ export async function verifyEmail(input: z.infer<typeof verifyEmailSchema>) {
   }
 
   try {
+    const requestMetadata = await getCurrentRequestMetadata()
     const authentication =
-      await workos.userManagement.authenticateWithEmailVerification(
-        getEmailVerificationAuthenticationOptionsFromMetadata(
-          await getCurrentRequestMetadata(),
-          body.code,
-          pendingAuthState.pendingAuthenticationToken
-        )
-      )
+      await workos.userManagement.authenticateWithEmailVerification({
+        clientId: serverEnv.WORKOS_CLIENT_ID,
+        code: body.code,
+        ipAddress: requestMetadata.ipAddress,
+        pendingAuthenticationToken: pendingAuthState.pendingAuthenticationToken,
+        userAgent: requestMetadata.userAgent,
+      })
 
     return {
       user: await createSessionUser(authentication.user, {

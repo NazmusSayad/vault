@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 
 import { createSessionUser } from '@/server/auth/session'
 import {
@@ -15,7 +15,7 @@ const signUpSchema = z.object({
   password: z.string().min(1, 'Enter your password.'),
 })
 
-export async function signUp(input: z.infer<typeof signUpSchema>) {
+export async function signUpAction(input: z.infer<typeof signUpSchema>) {
   const body = signUpSchema.parse(input)
 
   try {

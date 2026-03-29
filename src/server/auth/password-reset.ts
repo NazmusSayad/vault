@@ -1,6 +1,6 @@
-import 'server-only'
+'use server'
 
-import { markPasswordChanged } from '@/server/auth/session'
+import { prisma } from '@/server/.db'
 import { workos } from '@/server/auth/shared'
 import { z } from 'zod'
 
@@ -13,7 +13,7 @@ const resetPasswordSchema = z.object({
   token: z.string().trim().min(1, 'This reset link is missing its token.'),
 })
 
-export async function forgotPassword(
+export async function forgotPasswordAction(
   input: z.infer<typeof forgotPasswordSchema>
 ) {
   const body = forgotPasswordSchema.parse(input)
@@ -36,7 +36,7 @@ export async function forgotPassword(
   }
 }
 
-export async function resetPassword(
+export async function resetPasswordAction(
   input: z.infer<typeof resetPasswordSchema>
 ) {
   const body = resetPasswordSchema.parse(input)
@@ -47,7 +47,15 @@ export async function resetPassword(
       token: body.token,
     })
 
-    await markPasswordChanged(user)
+    await prisma.user.update({
+      where: {
+        workosId: user.id,
+      },
+      data: {
+        authChangedAt: new Date(),
+        isVerified: user.emailVerified,
+      },
+    })
   } catch (error) {
     throw new Error(
       error instanceof Error ? error.message : 'Could not reset your password.'
@@ -56,7 +64,7 @@ export async function resetPassword(
 
   return {
     redirectTo:
-      '/login?notice=Your%20password%20has%20been%20reset.%20Sign%20in%20with%20your%20new%20password.',
+      '/auth/login?notice=Your%20password%20has%20been%20reset.%20Sign%20in%20with%20your%20new%20password.',
     success: true,
   }
 }

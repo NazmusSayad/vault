@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./server/.db"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workosId      String   @unique
+  isVerified    Boolean  @default(false)
+  authChangedAt DateTime @default(now())
+
+  name      String
+  avatarUrl String?
+
+  vaults Vault[]
+}
+
+model Vault {
+  id        String   @id @default(ulid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+  icon String?
+
+  testAuthHash   String
+  lastAccessedAt DateTime?
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  vaultRecords VaultRecord[]
+}
+
+model VaultRecord {
+  id        String   @id @default(ulid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+  type RecordType
+  data Json // [key: string, value: string][]
+
+  vaultId String
+  vault   Vault  @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+}
+
+enum RecordType {
+  PASSWORD
+  API_KEY
+  NOTE
+}

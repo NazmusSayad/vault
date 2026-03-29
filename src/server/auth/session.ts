@@ -1,4 +1,4 @@
-import 'server-only'
+'use server'
 
 import { serverEnv } from '@/env.server'
 import { prisma } from '@/server/.db'
@@ -11,7 +11,7 @@ import {
   setResponseSessionCookie,
   setSessionCookie,
 } from '@/server/auth/auth-state'
-import { getAbsoluteUrl, getSafeReturnTo } from '@/server/auth/shared'
+import { getAbsoluteUrl } from '@/server/auth/shared'
 import type { SessionUser } from '@/server/auth/types'
 import type { User } from '@workos-inc/node'
 import { SignJWT, jwtVerify } from 'jose'
@@ -24,12 +24,12 @@ const jwtSecret = new TextEncoder().encode(serverEnv.APP_SESSION_SECRET)
 function serializeSessionUser(appUser: {
   id: string
   name: string
-  userVerified: boolean
+  isVerified: boolean
 }) {
   return {
     id: appUser.id,
     name: appUser.name,
-    userVerified: appUser.userVerified,
+    isVerified: appUser.isVerified,
   } satisfies SessionUser
 }
 
@@ -37,7 +37,7 @@ async function createSessionToken(userId: string) {
   return new SignJWT({})
     .setProtectedHeader({ alg: 'HS256' })
     .setAudience(jwtAudience)
-    .setExpirationTime(serverEnv.APP_SESSION_TTL)
+    .setExpirationTime('30d')
     .setIssuedAt()
     .setIssuer(jwtIssuer)
     .setSubject(userId)
@@ -67,48 +67,49 @@ async function verifySessionToken() {
   }
 }
 
-function getNameOverride(name?: string) {
-  const trimmedName = name?.trim()
-
-  return trimmedName ? trimmedName : undefined
-}
-
 function isPasswordChangeNewerThanToken(
   appUser: {
-    passwordChangedAt: Date | null
+    authChangedAt: Date | null
   },
   issuedAt?: number
 ) {
-  if (!appUser.passwordChangedAt || typeof issuedAt !== 'number') {
+  if (!appUser.authChangedAt || typeof issuedAt !== 'number') {
     return false
   }
 
-  return issuedAt < Math.floor(appUser.passwordChangedAt.getTime() / 1000)
+  return issuedAt < Math.floor(appUser.authChangedAt.getTime() / 1000)
 }
 
 async function syncAppUser(workosUser: User, options?: { name?: string }) {
   const existingUser = await prisma.user.findUnique({
-    where: { workosUserId: workosUser.id },
+    where: { workosId: workosUser.id },
   })
+
+  const profilePictureUrl = workosUser.profilePictureUrl?.trim()
 
   if (!existingUser) {
     return prisma.user.create({
       data: {
-        name: getNameOverride(options?.name) ?? getDefaultName(workosUser),
-        userVerified: workosUser.emailVerified,
-        workosUserId: workosUser.id,
+        avatarUrl: profilePictureUrl,
+        name: options?.name?.trim() || getDefaultName(workosUser),
+        isVerified: workosUser.emailVerified,
+        workosId: workosUser.id,
       },
     })
   }
 
-  if (existingUser.userVerified === workosUser.emailVerified) {
+  if (
+    existingUser.isVerified === workosUser.emailVerified &&
+    (existingUser.avatarUrl || !profilePictureUrl)
+  ) {
     return existingUser
   }
 
   return prisma.user.update({
     where: { id: existingUser.id },
     data: {
-      userVerified: workosUser.emailVerified,
+      avatarUrl: existingUser.avatarUrl || profilePictureUrl,
+      isVerified: workosUser.emailVerified,
     },
   })
 }
@@ -136,7 +137,7 @@ export async function createAuthenticationSuccessResponse(
 ) {
   const appUser = await syncAppUser(workosUser, options)
   const response = NextResponse.redirect(
-    getAbsoluteUrl(getSafeReturnTo(options?.returnTo ?? '/'))
+    getAbsoluteUrl(options?.returnTo?.startsWith('/') ? options.returnTo : '/')
   )
 
   clearResponsePendingAuthCookie(response)
@@ -145,18 +146,7 @@ export async function createAuthenticationSuccessResponse(
   return response
 }
 
-export async function markPasswordChanged(workosUser: User) {
-  const appUser = await syncAppUser(workosUser)
-
-  await prisma.user.update({
-    where: { id: appUser.id },
-    data: {
-      passwordChangedAt: new Date(),
-    },
-  })
-}
-
-export async function getCurrentSessionUser() {
+async function getCurrentSessionUser() {
   const payload = await verifySessionToken()
 
   if (!payload?.sub) {
@@ -180,13 +170,23 @@ export async function getCurrentSessionUser() {
   return serializeSessionUser(appUser)
 }
 
-export async function getSession() {
+export async function requireCurrentSessionUser() {
+  const user = await getCurrentSessionUser()
+
+  if (!user) {
+    throw new Error('You must sign in to continue.')
+  }
+
+  return user
+}
+
+export async function getSessionAction() {
   return {
     user: await getCurrentSessionUser(),
   }
 }
 
-export async function signOut() {
+export async function signOutAction() {
   await clearPendingAuthState()
   await clearSessionCookie()
 

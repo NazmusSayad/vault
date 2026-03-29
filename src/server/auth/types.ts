@@ -14,5 +14,5 @@ export type AuthFeedback = {
 export type SessionUser = {
   id: string
   name: string
-  userVerified: boolean
+  isVerified: boolean
 }

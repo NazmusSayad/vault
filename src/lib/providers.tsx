@@ -1,10 +1,10 @@
 'use client'
 
 import { queryClient } from '@/lib/query-client'
-import { getSessionAction } from '@/server/auth/session.actions'
+import { getSessionAction } from '@/server/auth/session'
 import { useAuthStore } from '@/store/use-auth-store'
 import { QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
 import { PropsWithChildren, useEffect } from 'react'
 import { Toaster } from 'sonner'
 
@@ -31,6 +31,18 @@ function AuthBootstrap() {
   return null
 }
 
+function SonnerToaster() {
+  const theme = useTheme()
+
+  return (
+    <Toaster
+      richColors
+      theme={theme.resolvedTheme === 'dark' ? 'dark' : 'light'}
+      className="cursor-grab select-none active:cursor-grabbing"
+    />
+  )
+}
+
 export function Providers({ children }: PropsWithChildren) {
   return (
     <ThemeProvider attribute="class" enableSystem>
@@ -39,10 +51,7 @@ export function Providers({ children }: PropsWithChildren) {
 
         {children}
 
-        <Toaster
-          richColors
-          className="cursor-grab select-none active:cursor-grabbing"
-        />
+        <SonnerToaster />
       </QueryClientProvider>
     </ThemeProvider>
   )
