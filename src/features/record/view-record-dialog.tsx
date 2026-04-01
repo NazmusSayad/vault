@@ -1,12 +1,12 @@
 'use client'
 
+import { Loading } from '@/components/loading'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import {
   BetterDialog,
   BetterDialogContent,
 } from '@/components/ui/better-dialog'
-import { Skeleton } from '@/components/ui/skeleton'
 import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
 import { RecordType } from '@/server/db/.prisma/browser'
@@ -168,10 +168,8 @@ function RecordDialogContent({ recordId, vaultId }: RecordDialogContentProps) {
         title="Loading record"
         description="Fetching record details."
       >
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
+        <div className="flex min-h-56 items-center justify-center">
+          <Loading className="text-primary size-10 shrink-0" />
         </div>
       </BetterDialogContent>
     )

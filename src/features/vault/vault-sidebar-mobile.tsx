@@ -1,5 +1,6 @@
 'use client'
 
+import { Loading } from '@/components/loading'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +11,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { getVaultsAction } from '@/server/vault/vault'
 import {
@@ -97,15 +97,11 @@ export function VaultSidebarMobile() {
                     <span className="flex-1">All vaults</span>
                   </Link>
 
-                  {vaultsQuery.isPending &&
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="border-border bg-background rounded-2xl border px-4 py-3"
-                      >
-                        <Skeleton className="h-10 w-full" />
-                      </div>
-                    ))}
+                  {vaultsQuery.isPending && (
+                    <div className="flex justify-center py-8">
+                      <Loading className="text-primary size-10 shrink-0" />
+                    </div>
+                  )}
 
                   {vaultsQuery.data?.vaults.map((vault) => {
                     const isActive = pathname.startsWith(`/vault/${vault.id}`)

@@ -1,9 +1,9 @@
 'use client'
 
+import { LoadingSection } from '@/components/loading'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { getVaultsAction } from '@/server/vault/vault'
 import { Folder01Icon, WalletAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -51,21 +51,7 @@ export function VaultHomePage() {
           </div>
         </section>
 
-        {vaultsQuery.isPending && (
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="border-border bg-card rounded-[1.5rem] border p-5"
-              >
-                <Skeleton className="mb-4 size-12 rounded-2xl" />
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="mt-3 h-4 w-24" />
-                <Skeleton className="mt-5 h-4 w-full" />
-              </div>
-            ))}
-          </section>
-        )}
+        {vaultsQuery.isPending && <LoadingSection />}
 
         {vaultsQuery.isError && (
           <Alert variant="destructive">
