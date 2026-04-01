@@ -57,7 +57,7 @@ export function VaultSidebarMobile() {
             </Button>
           </SheetTrigger>
 
-          <SheetContent side="left" className="w-full max-w-sm p-0">
+          <SheetContent side="right" className="w-full max-w-sm p-0">
             <SheetHeader className="border-border border-b">
               <SheetTitle>Vaults</SheetTitle>
               <SheetDescription>

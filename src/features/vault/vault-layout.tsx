@@ -15,14 +15,16 @@ export function VaultLayout({ children }: PropsWithChildren) {
     <main
       className={cn(
         'grid min-h-screen grid-cols-[auto_1fr]',
-        isMobile && 'grid-cols-1 grid-rows-[auto_1fr]'
+        isMobile && 'grid-cols-1 grid-rows-[1fr_auto]'
       )}
     >
-      {isMobile ? <VaultSidebarMobile /> : <VaultSidebarDesktop />}
+      {!isMobile && <VaultSidebarDesktop />}
 
       <BetterScrollAreaProvider>
         <BetterScrollAreaContent>{children}</BetterScrollAreaContent>
       </BetterScrollAreaProvider>
+
+      {isMobile && <VaultSidebarMobile />}
     </main>
   )
 }
