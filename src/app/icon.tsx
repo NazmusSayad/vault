@@ -11,12 +11,7 @@ export const contentType = 'image/png'
 
 export default function Icon() {
   return new ImageResponse(
-    <Logo
-      style={{
-        width: size.width,
-        height: size.height,
-      }}
-    />,
+    <Logo style={{ width: size.width, height: size.height }} />,
     size
   )
 }
