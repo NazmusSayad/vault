@@ -9,7 +9,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
-import { RecordType } from '@/server/.db/browser'
+import { RecordType } from '@/server/db/.prisma/browser'
 import {
   getVaultRecordAction,
   updateVaultRecordAction,

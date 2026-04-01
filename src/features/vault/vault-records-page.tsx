@@ -22,7 +22,7 @@ import {
   getRecordDialogHref,
   RecordDialog,
 } from '@/features/record/view-record-dialog'
-import { RecordType } from '@/server/.db/browser'
+import { RecordType } from '@/server/db/.prisma/browser'
 import { getVaultAction, unlockVaultAction } from '@/server/vault/vault'
 import { useAuthStore } from '@/store/use-auth-store'
 import {

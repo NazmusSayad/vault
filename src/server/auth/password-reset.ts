@@ -1,7 +1,7 @@
 'use server'
 
-import { prisma } from '@/server/.db'
 import { workos } from '@/server/auth/shared'
+import { prisma } from '@/server/db'
 import { z } from 'zod'
 
 const forgotPasswordSchema = z.object({

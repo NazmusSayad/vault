@@ -41,5 +41,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/server/.db/*
-!/src/server/.db/index.ts
+/src/server/db/.prisma

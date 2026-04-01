@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/better-dialog'
 import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
-import { RecordType } from '@/server/.db/browser'
+import { RecordType } from '@/server/db/.prisma/browser'
 import { createVaultRecordAction } from '@/server/vault/vault-record'
 import { useAuthStore } from '@/store/use-auth-store'
 import { File01Icon } from '@hugeicons/core-free-icons'

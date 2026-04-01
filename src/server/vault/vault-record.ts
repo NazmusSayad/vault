@@ -4,10 +4,10 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 
 import { serverEnv } from '@/env.server'
 import { EncryptionServer } from '@/lib/encryption/encryption.server'
-import { prisma } from '@/server/.db'
-import { RecordType } from '@/server/.db/enums'
 import { requireCurrentSessionUser } from '@/server/auth/session'
+import { prisma } from '@/server/db'
 import { z } from 'zod'
+import { RecordType } from '../db/.prisma/enums'
 
 const encryption = new EncryptionServer()
 const invalidVaultAuthMessage = 'Invalid vault PIN.'

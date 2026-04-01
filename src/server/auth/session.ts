@@ -1,7 +1,6 @@
 'use server'
 
 import { serverEnv } from '@/env.server'
-import { prisma } from '@/server/.db'
 import { getDefaultName } from '@/server/auth/auth-helpers'
 import {
   clearPendingAuthState,
@@ -13,6 +12,7 @@ import {
 } from '@/server/auth/auth-state'
 import { getAbsoluteUrl } from '@/server/auth/shared'
 import type { SessionUser } from '@/server/auth/types'
+import { prisma } from '@/server/db'
 import type { User } from '@workos-inc/node'
 import { SignJWT, jwtVerify } from 'jose'
 import { NextResponse } from 'next/server'

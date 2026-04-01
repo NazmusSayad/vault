@@ -3,9 +3,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 import { serverEnv } from '@/env.server'
-import { prisma } from '@/server/.db'
-import { RecordType } from '@/server/.db/enums'
 import { requireCurrentSessionUser } from '@/server/auth/session'
+import { prisma } from '@/server/db'
+import type { RecordType } from '@/server/db/.prisma/enums'
 import { z } from 'zod'
 
 const invalidVaultAuthMessage = 'Invalid vault PIN.'
@@ -78,7 +78,7 @@ function serializeVault(vault: {
 function serializeVaultRecord(record: {
   id: string
   name: string
-  type: keyof typeof RecordType
+  type: RecordType
   updatedAt: Date
   vaultId: string
 }) {

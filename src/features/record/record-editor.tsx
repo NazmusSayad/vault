@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { RecordType } from '@/server/.db/browser'
+import { RecordType } from '@/server/db/.prisma/browser'
 import {
   Add01Icon,
   Delete02Icon,

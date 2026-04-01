@@ -5,7 +5,7 @@ import { serverEnv } from './src/env.server'
 
 export default defineConfig({
   schema: './src/db.prisma',
-  migrations: { path: './src/server/.db' },
+  migrations: { path: './src/server/db/.prisma' },
   datasource: {
     url: serverEnv.DATABASE_URL,
   },
