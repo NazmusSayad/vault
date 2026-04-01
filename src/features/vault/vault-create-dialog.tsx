@@ -13,6 +13,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { queryClient } from '@/lib/query-client'
 import { createVaultAction } from '@/server/vault/vault'
 import { useAuthStore } from '@/store/use-auth-store'
@@ -25,6 +32,7 @@ import { type ReactNode, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { VAULT_ICONS } from './constants/vault-icons'
 
 type VaultCreateDialogProps = {
   trigger: ReactNode
@@ -64,7 +72,7 @@ function VaultCreateDialogContent({
   const form = useForm({
     defaultValues: {
       auth: '',
-      icon: '',
+      icon: 'password',
       name: '',
     },
     resolver: zodResolver(vaultCreateFormSchema),
@@ -156,11 +164,27 @@ function VaultCreateDialogContent({
               <FormItem>
                 <FormLabel>Icon</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Optional emoji or short label"
+                  <Select
+                    value={field.value}
                     disabled={createVaultMutation.isPending}
-                  />
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an icon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(VAULT_ICONS).map(([key, icon]) => (
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            <HugeiconsIcon icon={icon} className="size-4" />
+                            {key
+                              .replace(/([A-Z])/g, ' $1')
+                              .replace(/^./, (char) => char.toUpperCase())}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { SheetClose } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/server/auth/session'
 import { getVaultsAction } from '@/server/vault/vault'
@@ -25,9 +26,16 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { resolveVaultIcon } from './constants/vault-icons'
 import { VaultCreateDialog } from './vault-create-dialog'
 
-export function VaultSidebarDesktop() {
+export function VaultSidebarDesktop({
+  mobileMode,
+  triggerSheetClose,
+}: {
+  mobileMode?: boolean
+  triggerSheetClose?: () => void
+}) {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -70,7 +78,8 @@ export function VaultSidebarDesktop() {
         'border-border bg-card grid h-screen w-[16rem] grid-rows-[auto_1fr_auto] border-r',
         vaultsQuery.data?.vaults.length
           ? 'grid-rows-[auto_1fr_auto]'
-          : 'grid-rows-[1fr_auto]'
+          : 'grid-rows-[1fr_auto]',
+        mobileMode && 'w-full'
       )}
     >
       {!!vaultsQuery.data?.vaults.length && (
@@ -85,6 +94,29 @@ export function VaultSidebarDesktop() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+
+            {mobileMode && (
+              <SheetClose asChild>
+                <Button size="icon" variant="secondary" className="rounded-xl">
+                  <svg
+                    fill="none"
+                    width="1em"
+                    height="1em"
+                    viewBox="0 0 16 16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M14.7434 1.1709L0.743408 15.1709M0.743408 1.1709L14.7434 15.1709"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="transition-all"
+                    />
+                  </svg>
+                </Button>
+              </SheetClose>
+            )}
           </div>
 
           <BetterScrollAreaProvider>
@@ -102,15 +134,16 @@ export function VaultSidebarDesktop() {
                       <Button
                         asChild
                         size="lg"
-                        className="w-full justify-between px-2"
+                        onClick={triggerSheetClose}
+                        className="w-full justify-between px-3"
                         variant={isActive ? 'default' : 'ghost'}
                       >
                         <Link href={`/vault/${vault.id}`}>
-                          <span className="flex items-center gap-2">
-                            <span className="flex size-9 items-center justify-center overflow-hidden rounded-xl text-sm font-semibold uppercase">
-                              {vault.icon?.trim().charAt(0) ||
-                                vault.name.charAt(0).toUpperCase()}
-                            </span>
+                          <span className="flex items-center gap-2.5">
+                            <HugeiconsIcon
+                              icon={resolveVaultIcon(vault.icon || '')}
+                              className="text-foreground/80 size-4"
+                            />
 
                             <span className="truncate">{vault.name}</span>
                           </span>
@@ -118,7 +151,7 @@ export function VaultSidebarDesktop() {
                           {!!vaultAuthMap[vault.id] && (
                             <HugeiconsIcon
                               icon={SquareUnlock01Icon}
-                              className="text-foreground/50 size-4"
+                              className="text-foreground/50 size-3"
                             />
                           )}
                         </Link>

@@ -3,6 +3,7 @@ import {
   CirclePasswordIcon,
   EncryptIcon,
   FingerPrintIcon,
+  FolderLockedIcon,
   IncognitoIcon,
   Key01Icon,
   LockedIcon,
@@ -36,5 +37,5 @@ export const VAULT_ICONS: Record<string, IconSvgElement> = {
 }
 
 export function resolveVaultIcon(name: string): IconSvgElement {
-  return VAULT_ICONS[name] || LockIcon
+  return VAULT_ICONS[name] || FolderLockedIcon
 }
