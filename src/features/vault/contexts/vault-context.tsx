@@ -1,5 +1,6 @@
 'use client'
 
+import { LoadingSection } from '@/components/loading'
 import { getVaultRecordsAction } from '@/server/vault/vault'
 import { useAuthStore } from '@/store/use-auth-store'
 import { nonNullable } from '@/utils/basic'
@@ -44,7 +45,15 @@ export const [VaultContextProvider, useVaultContext] = createContext(
     useChildrenProvider(children, value) {
       if (!value.secret) return <VaultUnauthedPage />
 
-      return children
+      if (value.isLoading) {
+        return <LoadingSection />
+      }
+
+      if (value.vault && value.records) {
+        return children
+      }
+
+      return <div>Failed to load vault data.</div>
     },
   }
 )

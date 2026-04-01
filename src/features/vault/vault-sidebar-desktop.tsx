@@ -2,6 +2,7 @@
 
 import { Loading } from '@/components/loading'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { BetterScrollArea } from '@/components/ui/better-scroll-area'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -49,9 +50,9 @@ export function VaultSidebarDesktop() {
   }
 
   return (
-    <aside className="border-border bg-card/70 h-screen w-[20rem] min-w-[20rem] border-r">
-      <div className="flex h-full flex-col">
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+    <aside className="border-border bg-card grid h-screen w-[20rem] min-w-[20rem] grid-rows-[1fr_auto] border-r">
+      <BetterScrollArea>
+        <div className="px-4 py-4">
           {!!vaultsQuery.data?.vaults.length && (
             <nav className="space-y-2">
               {vaultsQuery.data.vaults.map((vault) => {
@@ -89,49 +90,53 @@ export function VaultSidebarDesktop() {
             </div>
           )}
         </div>
+      </BetterScrollArea>
 
-        <div className="border-border bg-card flex flex-col gap-3 border-t px-4 py-4">
-          <VaultCreateDialog
-            trigger={
-              <Button variant="outline" className="w-full">
-                <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
-                Create new vault
-              </Button>
-            }
-          />
+      <div className="flex flex-col gap-3 px-4 py-4">
+        <VaultCreateDialog
+          trigger={
+            <Button variant="outline" className="w-full">
+              <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
+              Create new vault
+            </Button>
+          }
+        />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-start gap-3">
-                <Avatar className="size-6">
-                  <AvatarImage
-                    src={user?.avatarUrl || undefined}
-                    alt={user?.name}
-                  />
-                  <AvatarFallback>{user?.name || 'Account'}</AvatarFallback>
-                </Avatar>
-                <span className="truncate">{user?.name || 'Account'}</span>
-              </Button>
-            </DropdownMenuTrigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full justify-start gap-3 px-2"
+            >
+              <Avatar className="size-6">
+                <AvatarImage
+                  src={user?.avatarUrl || undefined}
+                  alt={user?.name}
+                />
+                <AvatarFallback>{user?.name || 'Account'}</AvatarFallback>
+              </Avatar>
+              <span className="truncate">{user?.name || 'Account'}</span>
+            </Button>
+          </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-[16rem]">
-              <DropdownMenuItem asChild>
-                <Link href="/account">Account</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={isSigningOut}
-                onSelect={(event) => {
-                  event.preventDefault()
-                  void handleSignOut()
-                }}
-              >
-                {isSigningOut && <Loading className="size-4" />}
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <DropdownMenuContent align="end" className="w-[16rem]">
+            <DropdownMenuItem asChild>
+              <Link href="/account">Account</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isSigningOut}
+              onSelect={(event) => {
+                event.preventDefault()
+                void handleSignOut()
+              }}
+            >
+              {isSigningOut && <Loading className="size-4" />}
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   )

@@ -4,16 +4,27 @@ import {
   BetterDialog,
   BetterDialogContent,
 } from '@/components/ui/better-dialog'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { queryClient } from '@/lib/query-client'
 import { createVaultAction } from '@/server/vault/vault'
 import { useAuthStore } from '@/store/use-auth-store'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Add01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import { z } from 'zod'
 
 type VaultCreateDialogProps = {
   trigger: ReactNode
@@ -22,6 +33,12 @@ type VaultCreateDialogProps = {
 type VaultCreateDialogContentProps = {
   onOpenChange: (open: boolean) => void
 }
+
+const vaultCreateFormSchema = z.object({
+  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
+  icon: z.string().trim().optional(),
+  name: z.string().trim().min(1, 'Enter a vault name.'),
+})
 
 export function VaultCreateDialog({ trigger }: VaultCreateDialogProps) {
   const [open, setOpen] = useState(false)
@@ -44,10 +61,14 @@ function VaultCreateDialogContent({
   const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
   const setVaultAuth = useAuthStore((state) => state.setVaultAuth)
-  const [auth, setAuth] = useState('')
-  const [icon, setIcon] = useState('')
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
+  const form = useForm({
+    defaultValues: {
+      auth: '',
+      icon: '',
+      name: '',
+    },
+    resolver: zodResolver(vaultCreateFormSchema),
+  })
   const createVaultMutation = useMutation({
     mutationFn: createVaultAction,
     onSuccess: async (result, variables) => {
@@ -74,73 +95,83 @@ function VaultCreateDialogContent({
       footerSubmitLoading={createVaultMutation.isPending}
       onFooterSubmitClick={() => formRef.current?.requestSubmit()}
     >
-      <form
-        ref={formRef}
-        className="space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault()
-
-          createVaultMutation.mutate(
-            {
-              auth,
-              icon,
-              name,
-            },
-            {
+      <Form {...form}>
+        <form
+          ref={formRef}
+          className="space-y-4"
+          onSubmit={form.handleSubmit((values) => {
+            createVaultMutation.mutate(values, {
               onError: (mutationError) => {
-                setError(
-                  mutationError instanceof Error
-                    ? mutationError.message
-                    : 'Could not create the vault.'
-                )
+                form.setError('root', {
+                  message:
+                    mutationError instanceof Error
+                      ? mutationError.message
+                      : 'Could not create the vault.',
+                })
               },
-            }
-          )
-        }}
-      >
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="vault-name">
-            Vault name
-          </label>
-          <Input
-            id="vault-name"
-            placeholder="Engineering Secrets"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            })
+          })}
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vault name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Engineering Secrets"
+                    disabled={createVaultMutation.isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="vault-auth">
-            Vault PIN
-          </label>
-          <Input
-            id="vault-auth"
-            type="password"
-            placeholder="Enter a vault PIN"
-            value={auth}
-            onChange={(event) => setAuth(event.target.value)}
+          <FormField
+            control={form.control}
+            name="auth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vault PIN</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="password"
+                    placeholder="Enter a vault PIN"
+                    disabled={createVaultMutation.isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="vault-icon">
-            Icon
-          </label>
-          <Input
-            id="vault-icon"
-            placeholder="Optional emoji or short label"
-            value={icon}
-            onChange={(event) => setIcon(event.target.value)}
+          <FormField
+            control={form.control}
+            name="icon"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Icon</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Optional emoji or short label"
+                    disabled={createVaultMutation.isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        {error && (
-          <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-2xl border px-4 py-3 text-sm">
-            {error}
-          </div>
-        )}
-      </form>
+          {form.formState.errors.root?.message ? (
+            <p>{form.formState.errors.root.message}</p>
+          ) : null}
+        </form>
+      </Form>
     </BetterDialogContent>
   )
 }
