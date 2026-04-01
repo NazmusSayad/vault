@@ -1,5 +1,6 @@
 'use client'
 
+import { Logo } from '@/components/brand/logo'
 import { Loading } from '@/components/loading'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -13,10 +14,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { signOutAction } from '@/server/auth/session'
 import { getVaultsAction } from '@/server/vault/vault'
 import { useAuthStore } from '@/store/use-auth-store'
-import { WalletAdd01Icon } from '@hugeicons/core-free-icons'
+import { SquareUnlock01Icon, WalletAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
@@ -25,15 +28,25 @@ import { useState } from 'react'
 import { VaultCreateDialog } from './vault-create-dialog'
 
 export function VaultSidebarDesktop() {
-  const pathname = usePathname()
   const router = useRouter()
-  const [isSigningOut, setIsSigningOut] = useState(false)
+  const pathname = usePathname()
+
   const user = useAuthStore((state) => state.user)
+  const vaultAuthMap = useAuthStore((state) => state.vaultAuthByVaultId)
+
   const clearSession = useAuthStore((state) => state.clearSession)
   const vaultsQuery = useQuery({
     queryFn: () => getVaultsAction(),
     queryKey: ['vaults'],
   })
+
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredVaults =
+    vaultsQuery.data?.vaults.filter((vault) =>
+      vault.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || []
 
   async function handleSignOut() {
     if (isSigningOut) {
@@ -52,43 +65,78 @@ export function VaultSidebarDesktop() {
   }
 
   return (
-    <aside className="border-border bg-card grid h-screen w-[16rem] grid-rows-[auto_1fr_auto] border-r">
-      <div>search</div>
-
+    <aside
+      className={cn(
+        'border-border bg-card grid h-screen w-[16rem] grid-rows-[auto_1fr_auto] border-r',
+        vaultsQuery.data?.vaults.length
+          ? 'grid-rows-[auto_1fr_auto]'
+          : 'grid-rows-[1fr_auto]'
+      )}
+    >
       {!!vaultsQuery.data?.vaults.length && (
-        <BetterScrollAreaProvider>
-          <BetterScrollAreaContent
-            style={{
-              maskImage: `linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)`,
-            }}
-          >
-            <ul className="flex flex-col gap-2 p-3">
-              {vaultsQuery.data.vaults.map((vault) => {
-                const isActive = pathname.startsWith(`/vault/${vault.id}`)
+        <>
+          <div className="flex items-center gap-4 border-b p-3 py-2.5">
+            <Link href="/vault">
+              <Logo className="size-8" />
+            </Link>
 
-                return (
-                  <li key={vault.id}>
-                    <Button
-                      asChild
-                      size="lg"
-                      className="w-full justify-start px-2"
-                      variant={isActive ? 'default' : 'ghost'}
-                    >
-                      <Link href={`/vault/${vault.id}`}>
-                        <span className="flex size-9 items-center justify-center overflow-hidden rounded-xl text-sm font-semibold uppercase">
-                          {vault.icon?.trim().charAt(0) ||
-                            vault.name.charAt(0).toUpperCase()}
-                        </span>
+            <Input
+              placeholder="Search Vault"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-                        <span className="truncate">{vault.name}</span>
-                      </Link>
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          </BetterScrollAreaContent>
-        </BetterScrollAreaProvider>
+          <BetterScrollAreaProvider>
+            <BetterScrollAreaContent
+              style={{
+                maskImage: `linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)`,
+              }}
+            >
+              <ul className="flex flex-col gap-2 p-3">
+                {filteredVaults.map((vault) => {
+                  const isActive = pathname.startsWith(`/vault/${vault.id}`)
+
+                  return (
+                    <li key={vault.id}>
+                      <Button
+                        asChild
+                        size="lg"
+                        className="w-full justify-between px-2"
+                        variant={isActive ? 'default' : 'ghost'}
+                      >
+                        <Link href={`/vault/${vault.id}`}>
+                          <span className="flex items-center gap-2">
+                            <span className="flex size-9 items-center justify-center overflow-hidden rounded-xl text-sm font-semibold uppercase">
+                              {vault.icon?.trim().charAt(0) ||
+                                vault.name.charAt(0).toUpperCase()}
+                            </span>
+
+                            <span className="truncate">{vault.name}</span>
+                          </span>
+
+                          {!!vaultAuthMap[vault.id] && (
+                            <HugeiconsIcon
+                              icon={SquareUnlock01Icon}
+                              className="text-foreground/50 size-4"
+                            />
+                          )}
+                        </Link>
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {filteredVaults.length === 0 && (
+                <p className="text-muted-foreground px-4 text-center text-sm break-keep">
+                  <span className="break-keep">No vaults found for</span>{' '}
+                  <span className="break-all">&quot;{searchQuery}&quot;</span>
+                </p>
+              )}
+            </BetterScrollAreaContent>
+          </BetterScrollAreaProvider>
+        </>
       )}
 
       {vaultsQuery.data?.vaults.length === 0 && (
@@ -104,7 +152,7 @@ export function VaultSidebarDesktop() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2 p-3">
+      <div className="flex flex-col gap-2 border-t p-3">
         <VaultCreateDialog
           trigger={
             <Button variant="outline" className="w-full">
