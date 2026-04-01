@@ -11,7 +11,7 @@ export function Logo({ ...props }: ComponentProps<'svg'>) {
     >
       <g>
         <path
-          fill="#c2332c"
+          fill="#498854"
           fillRule="evenodd"
           d="m20.62,47.51l81.64,0a6,6 0 0 1 6,6l0,63.38a6,6 0 0 1 -6,6l-81.64,0a6,6 0 0 1 -6,-6l0,-63.39a6,6 0 0 1 6,-6l0,0.01z"
         />

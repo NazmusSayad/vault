@@ -76,18 +76,8 @@ function VaultUnlockDialog({
   return (
     <BetterDialog open={open} onOpenChange={onOpenChange} width="32rem">
       <BetterDialogContent
-        _headerContent={
-          <div className="border-border flex min-h-17 flex-col justify-center gap-0.5 border-b px-4.5 pb-0.5">
-            <h2 className="text-base font-medium">Unlock vault</h2>
-            <p className="text-muted-foreground/75 text-sm text-[0.8125rem]">
-              Enter the vault PIN to access this vault.
-            </p>
-          </div>
-        }
-        footerSubmit="Unlock vault"
-        footerSubmitIcon={
-          <HugeiconsIcon icon={SquareLock02Icon} className="size-4" />
-        }
+        title="Unlock vault"
+        description="Enter the vault PIN to access this vault."
         footerSubmitLoading={unlockVaultMutation.isPending}
         onFooterSubmitClick={() => formRef.current?.requestSubmit()}
       >

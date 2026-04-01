@@ -53,6 +53,7 @@ type BetterDialogContentProps = {
 
   title?: ReactNode
   description?: ReactNode
+  hideCloseButton?: boolean
 
   footerCancel?: ReactNode | true
   footerSubmit?: ReactNode | true
@@ -99,6 +100,7 @@ export function BetterDialogContent({
 
   title,
   description,
+  hideCloseButton,
 
   footerCancel,
   footerSubmit,
@@ -145,26 +147,28 @@ export function BetterDialogContent({
         </DialogDescription>
       </div>
 
-      <DialogClose asChild>
-        <button className="bg-muted text-foreground hover:bg-destructive flex size-[1em] cursor-pointer items-center justify-center rounded-[0.25em] text-sm text-[2rem] transition-all hover:text-red-700">
-          <svg
-            width="0.4em"
-            height="0.4em"
-            fill="none"
-            viewBox="0 0 16 16"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M14.7434 1.1709L0.743408 15.1709M0.743408 1.1709L14.7434 15.1709"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transition-all"
-            />
-          </svg>
-        </button>
-      </DialogClose>
+      {!hideCloseButton && (
+        <DialogClose asChild>
+          <button className="bg-muted text-foreground hover:bg-destructive flex size-[1em] cursor-pointer items-center justify-center rounded-[0.25em] text-sm text-[2rem] transition-all hover:text-red-700">
+            <svg
+              width="0.4em"
+              height="0.4em"
+              fill="none"
+              viewBox="0 0 16 16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14.7434 1.1709L0.743408 15.1709M0.743408 1.1709L14.7434 15.1709"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="transition-all"
+              />
+            </svg>
+          </button>
+        </DialogClose>
+      )}
     </DialogHeader>
   ) : null
 
