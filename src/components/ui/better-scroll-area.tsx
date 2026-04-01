@@ -38,3 +38,33 @@ export function BetterScrollArea({ children }: PropsWithChildren) {
     </BetterScrollAreaProvider>
   )
 }
+
+export function BetterScrollAreaFaded({
+  children,
+}: PropsWithChildren<{ fadeSpace?: number | string }>) {
+  return (
+    <BetterScrollAreaProvider>
+      <BetterScrollAreaContentFaded fadeSpace="16px">
+        {children}
+      </BetterScrollAreaContentFaded>
+    </BetterScrollAreaProvider>
+  )
+}
+
+export function BetterScrollAreaContentFaded({
+  fadeSpace,
+  ...props
+}: React.ComponentProps<typeof ScrollArea> & { fadeSpace: number | string }) {
+  const resolvedFadeSpace =
+    typeof fadeSpace === 'number' ? `${fadeSpace}px` : fadeSpace
+
+  return (
+    <BetterScrollAreaContent
+      {...props}
+      style={{
+        ...props?.style,
+        maskImage: `linear-gradient(to bottom, transparent 0, black ${resolvedFadeSpace}, black calc(100% - ${resolvedFadeSpace}), transparent 100%)`,
+      }}
+    />
+  )
+}

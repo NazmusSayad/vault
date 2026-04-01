@@ -3,10 +3,7 @@
 import { Logo } from '@/components/brand/logo'
 import { Loading } from '@/components/loading'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  BetterScrollAreaContent,
-  BetterScrollAreaProvider,
-} from '@/components/ui/better-scroll-area'
+import { BetterScrollAreaFaded } from '@/components/ui/better-scroll-area'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -119,56 +116,50 @@ export function VaultSidebarDesktop({
             )}
           </div>
 
-          <BetterScrollAreaProvider>
-            <BetterScrollAreaContent
-              style={{
-                maskImage: `linear-gradient(to bottom, transparent 0, black 12px, black calc(100% - 12px), transparent 100%)`,
-              }}
-            >
-              <ul className="flex flex-col gap-2 p-3">
-                {filteredVaults.map((vault) => {
-                  const isActive = pathname.startsWith(`/vault/${vault.id}`)
+          <BetterScrollAreaFaded fadeSpace="12px">
+            <ul className="flex flex-col gap-2 p-3">
+              {filteredVaults.map((vault) => {
+                const isActive = pathname.startsWith(`/vault/${vault.id}`)
 
-                  return (
-                    <li key={vault.id}>
-                      <Button
-                        asChild
-                        size="lg"
-                        onClick={triggerSheetClose}
-                        className="w-full justify-between px-3"
-                        variant={isActive ? 'default' : 'ghost'}
-                      >
-                        <Link href={`/vault/${vault.id}`}>
-                          <span className="flex items-center gap-2.5">
-                            <HugeiconsIcon
-                              icon={resolveVaultIcon(vault.icon || '')}
-                              className="text-foreground/80 size-4"
-                            />
+                return (
+                  <li key={vault.id}>
+                    <Button
+                      asChild
+                      size="lg"
+                      onClick={triggerSheetClose}
+                      className="w-full justify-between px-3"
+                      variant={isActive ? 'default' : 'ghost'}
+                    >
+                      <Link href={`/vault/${vault.id}`}>
+                        <span className="flex items-center gap-2.5">
+                          <HugeiconsIcon
+                            icon={resolveVaultIcon(vault.icon || '')}
+                            className="text-foreground/80 size-4"
+                          />
 
-                            <span className="truncate">{vault.name}</span>
-                          </span>
+                          <span className="truncate">{vault.name}</span>
+                        </span>
 
-                          {!!vaultAuthMap[vault.id] && (
-                            <HugeiconsIcon
-                              icon={SquareUnlock01Icon}
-                              className="text-foreground/50 size-3"
-                            />
-                          )}
-                        </Link>
-                      </Button>
-                    </li>
-                  )
-                })}
-              </ul>
+                        {!!vaultAuthMap[vault.id] && (
+                          <HugeiconsIcon
+                            icon={SquareUnlock01Icon}
+                            className="text-foreground/50 size-3"
+                          />
+                        )}
+                      </Link>
+                    </Button>
+                  </li>
+                )
+              })}
+            </ul>
 
-              {filteredVaults.length === 0 && (
-                <p className="text-muted-foreground px-4 text-center text-sm break-keep">
-                  <span className="break-keep">No vaults found for</span>{' '}
-                  <span className="break-all">&quot;{searchQuery}&quot;</span>
-                </p>
-              )}
-            </BetterScrollAreaContent>
-          </BetterScrollAreaProvider>
+            {filteredVaults.length === 0 && (
+              <p className="text-muted-foreground px-4 text-center text-sm break-keep">
+                <span className="break-keep">No vaults found for</span>{' '}
+                <span className="break-all">&quot;{searchQuery}&quot;</span>
+              </p>
+            )}
+          </BetterScrollAreaFaded>
         </>
       )}
 
