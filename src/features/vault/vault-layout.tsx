@@ -1,7 +1,3 @@
-import {
-  BetterScrollAreaContent,
-  BetterScrollAreaProvider,
-} from '@/components/ui/better-scroll-area'
 import { cn } from '@/lib/utils'
 import { PropsWithChildren } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
@@ -20,9 +16,7 @@ export function VaultLayout({ children }: PropsWithChildren) {
     >
       {!isMobile && <VaultSidebarDesktop />}
 
-      <BetterScrollAreaProvider>
-        <BetterScrollAreaContent>{children}</BetterScrollAreaContent>
-      </BetterScrollAreaProvider>
+      {children}
 
       {isMobile && <VaultSidebarMobile />}
     </main>

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { PropsWithChildren } from 'react'
 import { ScrollArea } from './scroll-area'
 
 export function BetterScrollAreaProvider({
@@ -27,5 +28,13 @@ export function BetterScrollAreaContent({
         height: '100%',
       }}
     />
+  )
+}
+
+export function BetterScrollArea({ children }: PropsWithChildren) {
+  return (
+    <BetterScrollAreaProvider>
+      <BetterScrollAreaContent>{children}</BetterScrollAreaContent>
+    </BetterScrollAreaProvider>
   )
 }
