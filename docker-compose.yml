@@ -1,9 +1,9 @@
 services:
   postgres:
     image: postgres:17
-    container_name: vault-postgres
+    container_name: keyvoid
     environment:
-      POSTGRES_DB: vault
+      POSTGRES_DB: keyvoid
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:

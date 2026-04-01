@@ -14,15 +14,15 @@ const getVaultSchema = z.object({
   vaultId: z.string().trim().min(1, 'Vault is required.'),
 })
 
+const getVaultRecordsSchema = z.object({
+  vaultId: z.string().trim().min(1, 'Vault is required.'),
+  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
+})
+
 const createVaultSchema = z.object({
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
   icon: z.string().trim().optional(),
   name: z.string().trim().min(1, 'Enter a vault name.'),
-})
-
-const unlockVaultSchema = z.object({
-  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
-  vaultId: z.string().trim().min(1, 'Vault is required.'),
 })
 
 function createVaultAuthHash(auth: string) {
@@ -149,6 +149,46 @@ export async function getVaultAction(input: z.infer<typeof getVaultSchema>) {
   }
 }
 
+export async function getVaultRecordsAction(
+  input: z.infer<typeof getVaultRecordsSchema>
+) {
+  const user = await requireCurrentSessionUser()
+  const body = getVaultRecordsSchema.parse(input)
+
+  const vault = await prisma.vault.findFirst({
+    where: {
+      id: body.vaultId,
+      ownerId: user.id,
+    },
+    include: {
+      vaultRecords: {
+        orderBy: [{ updatedAt: 'desc' }],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          updatedAt: true,
+          vaultId: true,
+        },
+      },
+    },
+  })
+
+  if (!vault) {
+    throw new Error('Vault not found.')
+  }
+
+  requireValidVaultAuth({
+    auth: body.auth,
+    authHash: vault.testAuthHash,
+  })
+
+  return {
+    vault: serializeVault(vault),
+    records: vault.vaultRecords.map(serializeVaultRecord),
+  }
+}
+
 export async function createVaultAction(
   input: z.infer<typeof createVaultSchema>
 ) {
@@ -172,35 +212,5 @@ export async function createVaultAction(
 
   return {
     vault: serializeVault(vault),
-  }
-}
-
-export async function unlockVaultAction(
-  input: z.infer<typeof unlockVaultSchema>
-) {
-  const user = await requireCurrentSessionUser()
-  const body = unlockVaultSchema.parse(input)
-  const vault = await prisma.vault.findFirst({
-    where: {
-      id: body.vaultId,
-      ownerId: user.id,
-    },
-    select: {
-      id: true,
-      testAuthHash: true,
-    },
-  })
-
-  if (!vault) {
-    throw new Error('Vault not found.')
-  }
-
-  requireValidVaultAuth({
-    auth: body.auth,
-    authHash: vault.testAuthHash,
-  })
-
-  return {
-    vaultId: vault.id,
   }
 }
