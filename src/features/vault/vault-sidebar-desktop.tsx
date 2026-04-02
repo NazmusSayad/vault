@@ -40,6 +40,7 @@ export function VaultSidebarDesktop({
   const pathname = usePathname()
 
   const vaultAuthMap = useAuthStore((state) => state.vaultAuthByVaultId)
+  const setVaultAuth = useAuthStore((state) => state.setVaultAuth)
 
   const vaultsQuery = useQuery({
     queryFn: () => getVaultsAction(),
@@ -161,7 +162,7 @@ export function VaultSidebarDesktop({
               const isActive = pathname.startsWith(`/vault/${vault.id}`)
 
               return (
-                <li key={vault.id}>
+                <li key={vault.id} className="relative isolate">
                   <Button
                     asChild
                     size="lg"
@@ -178,15 +179,21 @@ export function VaultSidebarDesktop({
 
                         <span className="truncate">{vault.name}</span>
                       </span>
-
-                      {!!vaultAuthMap[vault.id] && (
-                        <HugeiconsIcon
-                          icon={SquareUnlock01Icon}
-                          className="text-foreground/50 size-3"
-                        />
-                      )}
                     </Link>
                   </Button>
+
+                  {!!vaultAuthMap[vault.id] && (
+                    <Button
+                      variant="ghost"
+                      className="absolute top-1/2 right-2 size-6 -translate-y-1/2 p-0"
+                      onClick={() => setVaultAuth(vault.id, null)}
+                    >
+                      <HugeiconsIcon
+                        icon={SquareUnlock01Icon}
+                        className="text-foreground/50 size-3"
+                      />
+                    </Button>
+                  )}
                 </li>
               )
             })}

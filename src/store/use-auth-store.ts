@@ -39,11 +39,11 @@ export const useAuthStore = create(
         })
       },
 
-      setVaultAuth(vaultId: string, auth: string) {
+      setVaultAuth(vaultId: string, auth: string | null) {
         set((state) => ({
           vaultAuthByVaultId: {
             ...state.vaultAuthByVaultId,
-            [vaultId]: auth,
+            [vaultId]: auth ?? '',
           },
         }))
       },
