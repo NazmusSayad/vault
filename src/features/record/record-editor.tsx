@@ -14,6 +14,7 @@ export type RecordField = [key: string, value: string]
 
 type RecordEditorProps = {
   data: RecordField[]
+  metadata: RecordField[]
   disabled?: boolean
   error?: string
   formRef?: RefObject<HTMLFormElement | null>
@@ -21,6 +22,7 @@ type RecordEditorProps = {
   isPending?: boolean
   name: string
   onDataChange: (data: RecordField[]) => void
+  onMetadataChange: (metadata: RecordField[]) => void
   onNameChange: (name: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onTypeChange: (type: string) => void
@@ -34,6 +36,7 @@ export function createEmptyRecordField(): RecordField {
 
 export function RecordEditor({
   data,
+  metadata,
   disabled,
   error,
   formRef,
@@ -41,6 +44,7 @@ export function RecordEditor({
   isPending,
   name,
   onDataChange,
+  onMetadataChange,
   onNameChange,
   onSubmit,
   onTypeChange,
@@ -83,10 +87,10 @@ export function RecordEditor({
               </span>
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold tracking-tight">
-                  Record fields
+                  Data fields
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Store this record as an ordered list of key and value pairs.
+                  Store key-value fields for this record.
                 </p>
               </div>
             </div>
@@ -98,6 +102,12 @@ export function RecordEditor({
         </div>
 
         <div className="mt-6 space-y-4">
+          {data.length === 0 && (
+            <div className="text-muted-foreground border-border bg-background rounded-[1.5rem] border p-4 text-sm">
+              No data fields yet.
+            </div>
+          )}
+
           {data.map((field, index) => (
             <div
               key={`${index}-${field[0]}`}
@@ -156,7 +166,7 @@ export function RecordEditor({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  disabled={disabled || data.length === 1}
+                  disabled={disabled}
                   onClick={() => {
                     onDataChange(
                       data.filter((_, itemIndex) => itemIndex !== index)
@@ -179,7 +189,125 @@ export function RecordEditor({
             onClick={() => onDataChange([...data, createEmptyRecordField()])}
           >
             <HugeiconsIcon icon={Add01Icon} className="size-4" />
-            Add field
+            Add data field
+          </Button>
+        </div>
+      </section>
+
+      <section className="border-border bg-card rounded-[2rem] border p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="bg-muted flex size-10 items-center justify-center rounded-2xl">
+                <HugeiconsIcon icon={NoteIcon} className="size-4" />
+              </span>
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold tracking-tight">
+                  Metadata fields
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Store additional ordered key-value metadata.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Badge variant="outline" className="rounded-full px-3 py-1">
+            {metadata.length} fields
+          </Badge>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {metadata.length === 0 && (
+            <div className="text-muted-foreground border-border bg-background rounded-[1.5rem] border p-4 text-sm">
+              No metadata fields yet.
+            </div>
+          )}
+
+          {metadata.map((field, index) => (
+            <div
+              key={`${index}-${field[0]}`}
+              className="border-border bg-background grid gap-3 rounded-[1.5rem] border p-4 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)_auto] lg:items-start"
+            >
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium"
+                  htmlFor={`record-metadata-key-${index}`}
+                >
+                  Key
+                </label>
+                <Input
+                  id={`record-metadata-key-${index}`}
+                  placeholder="environment"
+                  value={field[0]}
+                  disabled={disabled}
+                  onChange={(event) => {
+                    onMetadataChange(
+                      metadata.map((item, itemIndex) =>
+                        itemIndex === index
+                          ? [event.target.value, item[1]]
+                          : item
+                      )
+                    )
+                  }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  className="text-sm font-medium"
+                  htmlFor={`record-metadata-value-${index}`}
+                >
+                  Value
+                </label>
+                <Textarea
+                  id={`record-metadata-value-${index}`}
+                  placeholder="production"
+                  value={field[1]}
+                  disabled={disabled}
+                  onChange={(event) => {
+                    onMetadataChange(
+                      metadata.map((item, itemIndex) =>
+                        itemIndex === index
+                          ? [item[0], event.target.value]
+                          : item
+                      )
+                    )
+                  }}
+                />
+              </div>
+
+              <div className="flex items-end justify-end lg:h-full">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={disabled}
+                  onClick={() => {
+                    onMetadataChange(
+                      metadata.filter((_, itemIndex) => itemIndex !== index)
+                    )
+                  }}
+                >
+                  <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                  <span className="sr-only">Remove field</span>
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 flex justify-start">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            onClick={() =>
+              onMetadataChange([...metadata, createEmptyRecordField()])
+            }
+          >
+            <HugeiconsIcon icon={Add01Icon} className="size-4" />
+            Add metadata field
           </Button>
         </div>
       </section>

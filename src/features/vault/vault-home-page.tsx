@@ -10,6 +10,7 @@ import { Folder01Icon, WalletAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useState } from 'react'
 import { VaultCreateDialog } from './vault-create-dialog'
 
 export function VaultHomePage() {
@@ -17,6 +18,8 @@ export function VaultHomePage() {
     queryFn: () => getVaultsAction(),
     queryKey: ['vaults'],
   })
+
+  const [isCreateVaultDialogOpen, setIsCreateVaultDialogOpen] = useState(false)
 
   return (
     <BetterScrollAreaFaded>
@@ -40,14 +43,14 @@ export function VaultHomePage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:items-start lg:items-end">
-              <VaultCreateDialog
-                trigger={
-                  <Button className="w-full sm:w-auto">
-                    <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
-                    New vault
-                  </Button>
-                }
-              />
+              <Button
+                className="w-full sm:w-auto"
+                onClick={() => setIsCreateVaultDialogOpen(true)}
+              >
+                <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
+                New vault
+              </Button>
+
               <p className="text-muted-foreground text-sm">
                 {vaultsQuery.data?.vaults.length ?? 0} vaults available
               </p>
@@ -83,17 +86,10 @@ export function VaultHomePage() {
                 </p>
               </div>
               <div className="mt-6 flex justify-center">
-                <VaultCreateDialog
-                  trigger={
-                    <Button>
-                      <HugeiconsIcon
-                        icon={WalletAdd01Icon}
-                        className="size-4"
-                      />
-                      Create your first vault
-                    </Button>
-                  }
-                />
+                <Button onClick={() => setIsCreateVaultDialogOpen(true)}>
+                  <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
+                  Create your first vault
+                </Button>
               </div>
             </section>
           )}
@@ -110,7 +106,6 @@ export function VaultHomePage() {
                     <div className="bg-muted text-foreground flex size-12 items-center justify-center rounded-2xl text-lg font-semibold">
                       {vault.icon?.trim() || vault.name.charAt(0).toUpperCase()}
                     </div>
-                    <Badge variant="outline">{vault.recordCount} records</Badge>
                   </div>
 
                   <div className="mt-5 space-y-2">
@@ -131,6 +126,11 @@ export function VaultHomePage() {
           )}
         </div>
       </div>
+
+      <VaultCreateDialog
+        open={isCreateVaultDialogOpen}
+        onOpenChange={setIsCreateVaultDialogOpen}
+      />
     </BetterScrollAreaFaded>
   )
 }

@@ -9,9 +9,7 @@ export function VaultRecordsPage() {
 
   return (
     <VaultContextProvider id={vaultId}>
-      <div>
-        <VaultAuthedPage />
-      </div>
+      <VaultAuthedPage />
     </VaultContextProvider>
   )
 }

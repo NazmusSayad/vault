@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { PropsWithChildren } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
+import styles from './vault-layout.module.css'
 import { VaultSidebarDesktop } from './vault-sidebar-desktop'
 import { VaultSidebarMobile } from './vault-sidebar-mobile'
 
@@ -10,7 +11,8 @@ export function VaultLayout({ children }: PropsWithChildren) {
   return (
     <main
       className={cn(
-        'grid min-h-screen grid-cols-[auto_1fr]',
+        styles.vaultMain,
+        'grid grid-cols-[auto_1fr]',
         isMobile && 'grid-cols-1 grid-rows-[1fr_auto]'
       )}
     >

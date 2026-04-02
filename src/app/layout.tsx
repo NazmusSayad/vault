@@ -19,7 +19,7 @@ const fontMono = Fira_Code({
 export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
-  title: 'Vault',
+  title: 'KeyVoid',
   description: 'End to end encrypted vault for your secrets',
 }
 

@@ -28,19 +28,11 @@ import { Add01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { type ReactNode, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { VAULT_ICONS } from './constants/vault-icons'
-
-type VaultCreateDialogProps = {
-  trigger: ReactNode
-}
-
-type VaultCreateDialogContentProps = {
-  onOpenChange: (open: boolean) => void
-}
 
 const vaultCreateFormSchema = z.object({
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
@@ -48,24 +40,25 @@ const vaultCreateFormSchema = z.object({
   name: z.string().trim().min(1, 'Enter a vault name.'),
 })
 
-export function VaultCreateDialog({ trigger }: VaultCreateDialogProps) {
-  const [open, setOpen] = useState(false)
-
+export function VaultCreateDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   return (
-    <BetterDialog
-      open={open}
-      onOpenChange={setOpen}
-      trigger={trigger}
-      width="32rem"
-    >
-      <VaultCreateDialogContent onOpenChange={setOpen} />
+    <BetterDialog open={open} onOpenChange={onOpenChange} width="32rem">
+      <VaultCreateDialogContent onOpenChange={onOpenChange} />
     </BetterDialog>
   )
 }
 
 function VaultCreateDialogContent({
   onOpenChange,
-}: VaultCreateDialogContentProps) {
+}: {
+  onOpenChange: (open: boolean) => void
+}) {
   const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
   const setVaultAuth = useAuthStore((state) => state.setVaultAuth)
@@ -81,7 +74,7 @@ function VaultCreateDialogContent({
     mutationFn: createVaultAction,
     onSuccess: async (result, variables) => {
       onOpenChange(false)
-      setVaultAuth(result.vault.id, variables.auth)
+      setVaultAuth(result.id, variables.auth)
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['vaults'] }),
@@ -89,7 +82,7 @@ function VaultCreateDialogContent({
       ])
 
       toast.success('Vault created.')
-      router.push(`/vault/${result.vault.id}`)
+      router.push(`/vault/${result.id}`)
     },
   })
 

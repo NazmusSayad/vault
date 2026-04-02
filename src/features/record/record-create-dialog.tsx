@@ -4,14 +4,13 @@ import {
   BetterDialog,
   BetterDialogContent,
 } from '@/components/ui/better-dialog'
-import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
+import { encryptRecordClient } from '@/lib/record-encrypt-client'
 import { createVaultRecordAction } from '@/server/vault/vault-record'
 import { useAuthStore } from '@/store/use-auth-store'
 import { File01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { type ReactNode, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -19,9 +18,6 @@ import {
   RecordEditor,
   type RecordField,
 } from './record-editor'
-import { getRecordDialogHref } from './view-record-dialog'
-
-const encryption = new EncryptionClient()
 
 type RecordCreateDialogProps = {
   trigger: ReactNode
@@ -35,6 +31,10 @@ type RecordCreateDialogContentProps = {
 
 function createInitialFields(): RecordField[] {
   return [createEmptyRecordField()]
+}
+
+function createDataMap(fields: RecordField[]) {
+  return Object.fromEntries(fields)
 }
 
 export function RecordCreateDialog({
@@ -63,16 +63,15 @@ function RecordCreateDialogContent({
     (state) => state.vaultAuthByVaultId[vaultId] ?? null
   )
   const formRef = useRef<HTMLFormElement>(null)
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
   const [data, setData] = useState<RecordField[]>(createInitialFields)
+  const [metadata, setMetadata] = useState<RecordField[]>(createInitialFields)
   const [error, setError] = useState('')
   const [name, setName] = useState('')
   const [type, setType] = useState('')
   const createRecordMutation = useMutation({
     mutationFn: async (input: {
       data: RecordField[]
+      metadata: RecordField[]
       name: string
       type: string
     }) => {
@@ -80,18 +79,22 @@ function RecordCreateDialogContent({
         throw new Error('Unlock this vault first.')
       }
 
+      const encrypted = await encryptRecordClient({
+        key: auth,
+        data: createDataMap(input.data),
+        metadata: input.metadata,
+      })
+
       return createVaultRecordAction({
         auth,
-        data: await encryption.encrypt({
-          key: auth,
-          data: JSON.stringify(input.data),
-        }),
+        data: encrypted.data ?? undefined,
+        metadata: encrypted.metadata ?? undefined,
         name: input.name,
         type: input.type,
         vaultId,
       })
     },
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       onOpenChange(false)
 
       await Promise.all([
@@ -101,7 +104,6 @@ function RecordCreateDialogContent({
       ])
 
       toast.success('Record created.')
-      router.push(getRecordDialogHref(pathname, searchParams, result.record.id))
     },
   })
 
@@ -121,6 +123,7 @@ function RecordCreateDialogContent({
         name={name}
         type={type}
         data={data}
+        metadata={metadata}
         error={error}
         isPending={createRecordMutation.isPending}
         hideSubmit
@@ -128,12 +131,14 @@ function RecordCreateDialogContent({
         onNameChange={setName}
         onTypeChange={setType}
         onDataChange={setData}
+        onMetadataChange={setMetadata}
         onSubmit={(event) => {
           event.preventDefault()
 
           createRecordMutation.mutate(
             {
               data,
+              metadata,
               name,
               type,
             },
