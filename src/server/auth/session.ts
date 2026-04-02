@@ -1,10 +1,7 @@
 'use server'
 
 import { serverEnv } from '@/env.server'
-import { getDefaultName } from '@/server/auth/auth-helpers'
 import {
-  clearPendingAuthState,
-  clearResponsePendingAuthCookie,
   clearSessionCookie,
   getSessionCookieValue,
   setResponseSessionCookie,
@@ -13,20 +10,22 @@ import {
 import { getAbsoluteUrl } from '@/server/auth/shared'
 import type { SessionUser } from '@/server/auth/types'
 import { prisma } from '@/server/db'
-import type { User } from '@workos-inc/node'
 import { SignJWT, jwtVerify } from 'jose'
 import { NextResponse } from 'next/server'
 
 const jwtAudience = 'vault-app-session'
 const jwtIssuer = serverEnv.APP_URL
-const jwtSecret = new TextEncoder().encode(serverEnv.APP_SESSION_SECRET)
+const jwtSecret = new TextEncoder().encode(serverEnv.JWT_SESSION_SECRET)
 
-function serializeSessionUser(appUser: SessionUser) {
+function serializeSessionUser(appUser: {
+  id: string
+  name: string
+  avatarUrl: string | null
+}) {
   return {
     avatarUrl: appUser.avatarUrl,
     id: appUser.id,
     name: appUser.name,
-    isVerified: appUser.isVerified,
   } satisfies SessionUser
 }
 
@@ -66,78 +65,39 @@ async function verifySessionToken() {
 
 function isPasswordChangeNewerThanToken(
   appUser: {
-    authChangedAt: Date | null
+    passwordChangedAt: Date | null
   },
   issuedAt?: number
 ) {
-  if (!appUser.authChangedAt || typeof issuedAt !== 'number') {
+  if (!appUser.passwordChangedAt || typeof issuedAt !== 'number') {
     return false
   }
 
-  return issuedAt < Math.floor(appUser.authChangedAt.getTime() / 1000)
+  return issuedAt < Math.floor(appUser.passwordChangedAt.getTime() / 1000)
 }
 
-async function syncAppUser(workosUser: User, options?: { name?: string }) {
-  const existingUser = await prisma.user.findUnique({
-    where: { workosId: workosUser.id },
-  })
-
-  const profilePictureUrl = workosUser.profilePictureUrl?.trim()
-
-  if (!existingUser) {
-    return prisma.user.create({
-      data: {
-        avatarUrl: profilePictureUrl,
-        name: options?.name?.trim() || getDefaultName(workosUser),
-        isVerified: workosUser.emailVerified,
-        workosId: workosUser.id,
-      },
-    })
-  }
-
-  if (
-    existingUser.isVerified === workosUser.emailVerified &&
-    (existingUser.avatarUrl || !profilePictureUrl)
-  ) {
-    return existingUser
-  }
-
-  return prisma.user.update({
-    where: { id: existingUser.id },
-    data: {
-      avatarUrl: existingUser.avatarUrl || profilePictureUrl,
-      isVerified: workosUser.emailVerified,
-    },
-  })
-}
-
-export async function createSessionUser(
-  workosUser: User,
-  options?: {
-    name?: string
-  }
-) {
-  const appUser = await syncAppUser(workosUser, options)
-
-  await clearPendingAuthState()
+export async function createSessionUser(appUser: {
+  id: string
+  name: string
+  avatarUrl: string | null
+}) {
   await setSessionCookie(await createSessionToken(appUser.id))
 
   return serializeSessionUser(appUser)
 }
 
 export async function createAuthenticationSuccessResponse(
-  workosUser: User,
+  appUser: {
+    id: string
+  },
   options?: {
-    name?: string
     returnTo?: string
   }
 ) {
-  const appUser = await syncAppUser(workosUser, options)
   const response = NextResponse.redirect(
     getAbsoluteUrl(options?.returnTo?.startsWith('/') ? options.returnTo : '/')
   )
 
-  clearResponsePendingAuthCookie(response)
   setResponseSessionCookie(response, await createSessionToken(appUser.id))
 
   return response
@@ -184,7 +144,6 @@ export async function getSessionAction() {
 }
 
 export async function signOutAction() {
-  await clearPendingAuthState()
   await clearSessionCookie()
 
   return { success: true }

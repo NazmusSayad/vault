@@ -19,7 +19,22 @@ model User {
   name      String
   avatarUrl String?
 
-  vaults Vault[]
+  vaults         Vault[]
+  oauthAccounts  OAuthAccount[]
+}
+
+model OAuthAccount {
+  id        String        @id @default(uuid())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  provider          OAuthProvider
+  providerAccountId String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 model Vault {
@@ -56,4 +71,9 @@ enum RecordType {
   PASSWORD
   API_KEY
   NOTE
+}
+
+enum OAuthProvider {
+  google
+  github
 }
