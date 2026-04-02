@@ -1,16 +1,12 @@
 'use server'
 
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 
 import { serverEnv } from '@/env.server'
+import { PublicVault } from '@/lib/schema'
 import { requireCurrentSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
 import { z } from 'zod'
-
-const getVaultRecordsSchema = z.object({
-  vaultId: z.string().trim().min(1, 'Vault is required.'),
-  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
-})
 
 const createVaultSchema = z.object({
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
@@ -22,68 +18,6 @@ function createVaultAuthHash(auth: string) {
   return createHmac('sha256', serverEnv.VAULT_HASH_KEY)
     .update(auth)
     .digest('hex')
-}
-
-function hashVaultAuth(auth: string) {
-  return createVaultAuthHash(auth)
-}
-
-function requireValidVaultAuth({
-  auth,
-  authHash,
-}: {
-  auth: string
-  authHash: string
-}) {
-  const expectedHash = Buffer.from(authHash, 'utf8')
-  const actualHash = Buffer.from(createVaultAuthHash(auth), 'utf8')
-
-  if (
-    expectedHash.length !== actualHash.length ||
-    !timingSafeEqual(expectedHash, actualHash)
-  ) {
-    throw new Error('Invalid vault PIN.')
-  }
-}
-
-function serializeVault(vault: {
-  id: string
-  createdAt: Date
-  updatedAt: Date
-  name: string
-  icon: string | null
-  lastAccessedAt: Date | null
-  _count?: {
-    vaultRecords: number
-  }
-}) {
-  return {
-    id: vault.id,
-    createdAt: vault.createdAt.toISOString(),
-    updatedAt: vault.updatedAt.toISOString(),
-    name: vault.name,
-    icon: vault.icon,
-    lastAccessedAt: vault.lastAccessedAt?.toISOString() ?? null,
-    recordCount: vault._count?.vaultRecords ?? 0,
-  }
-}
-
-function serializeVaultRecord(record: {
-  id: string
-  name: string
-  type: string
-  updatedAt: Date
-  vaultId: string
-  data: unknown
-}) {
-  return {
-    id: record.id,
-    name: record.name,
-    type: record.type,
-    updatedAt: record.updatedAt.toISOString(),
-    vaultId: record.vaultId,
-    data: record.data,
-  }
 }
 
 export async function getVaultsAction() {
@@ -103,48 +37,15 @@ export async function getVaultsAction() {
   })
 
   return {
-    vaults: vaults.map(serializeVault),
-  }
-}
-
-export async function getVaultRecordsAction(
-  input: z.infer<typeof getVaultRecordsSchema>
-) {
-  const user = await requireCurrentSessionUser()
-  const body = getVaultRecordsSchema.parse(input)
-
-  const vault = await prisma.vault.findFirst({
-    where: {
-      id: body.vaultId,
-      ownerId: user.id,
-    },
-    include: {
-      vaultRecords: {
-        orderBy: [{ updatedAt: 'desc' }],
-        select: {
-          data: true,
-          id: true,
-          name: true,
-          type: true,
-          updatedAt: true,
-          vaultId: true,
-        },
-      },
-    },
-  })
-
-  if (!vault) {
-    throw new Error('Vault not found.')
-  }
-
-  requireValidVaultAuth({
-    auth: body.auth,
-    authHash: vault.testAuthHash,
-  })
-
-  return {
-    vault: serializeVault(vault),
-    records: vault.vaultRecords.map(serializeVaultRecord),
+    vaults: vaults.map((vault) =>
+      PublicVault.parse({
+        id: vault.id,
+        createdAt: vault.createdAt.toISOString(),
+        updatedAt: vault.updatedAt.toISOString(),
+        name: vault.name,
+        icon: vault.icon,
+      })
+    ),
   }
 }
 
@@ -153,23 +54,14 @@ export async function createVaultAction(
 ) {
   const user = await requireCurrentSessionUser()
   const body = createVaultSchema.parse(input)
-  const vault = await prisma.vault.create({
+  await prisma.vault.create({
     data: {
       icon: body.icon || null,
       name: body.name,
       ownerId: user.id,
-      testAuthHash: hashVaultAuth(body.auth),
-    },
-    include: {
-      _count: {
-        select: {
-          vaultRecords: true,
-        },
-      },
+      testAuthHash: createVaultAuthHash(body.auth),
     },
   })
 
-  return {
-    vault: serializeVault(vault),
-  }
+  return true
 }
