@@ -86,12 +86,8 @@ export async function createSessionUser(appUser: {
 }
 
 export async function createAuthenticationSuccessResponse(
-  appUser: {
-    id: string
-  },
-  options?: {
-    returnTo?: string
-  }
+  appUser: { id: string },
+  options?: { returnTo?: string }
 ) {
   const response = NextResponse.redirect(
     new URL(

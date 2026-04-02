@@ -6,27 +6,14 @@ import {
 import { createAuthenticationSuccessResponse } from '@/server/auth/session'
 import { prisma } from '@/server/db'
 import { NextRequest, NextResponse } from 'next/server'
+import z from 'zod'
 
-type OAuthProvider = 'github' | 'google'
+const supportedProviderSchema = z.enum(['google', 'github'])
 
 type OAuthProfile = {
   avatarUrl: string | null
   email: string
   name: string | null
-}
-
-function parseProvider(value: string): OAuthProvider | null {
-  if (value === 'github' || value === 'google') {
-    return value
-  }
-
-  return null
-}
-
-function createAuthRedirect(request: NextRequest, message: string) {
-  return NextResponse.redirect(
-    new URL(`/auth/login?error=${encodeURIComponent(message)}`, request.url)
-  )
 }
 
 async function exchangeGoogleCodeForProfile(
@@ -177,12 +164,19 @@ async function exchangeGithubCodeForProfile(
   }
 }
 
-async function getOAuthProfile(provider: OAuthProvider, code: string) {
+async function getOAuthProfile(
+  provider: z.infer<typeof supportedProviderSchema>,
+  code: string
+) {
   if (provider === 'google') {
     return exchangeGoogleCodeForProfile(code)
   }
 
-  return exchangeGithubCodeForProfile(code)
+  if (provider === 'github') {
+    return exchangeGithubCodeForProfile(code)
+  }
+
+  throw new Error('Unsupported OAuth provider.')
 }
 
 export async function GET(
@@ -190,29 +184,26 @@ export async function GET(
   context: { params: Promise<{ provider: string }> }
 ) {
   const { provider: rawProvider } = await context.params
-  const provider = parseProvider(rawProvider)
-
-  if (!provider) {
-    return createAuthRedirect(request, 'Unsupported OAuth provider.')
-  }
-
-  const url = new URL(request.url)
-  const code = url.searchParams.get('code')
-  const error = url.searchParams.get('error')
-  const errorDescription = url.searchParams.get('error_description')
-
-  if (error || errorDescription) {
-    return createAuthRedirect(
-      request,
-      errorDescription ?? 'The OAuth provider returned an authentication error.'
-    )
-  }
-
-  if (!code) {
-    return createAuthRedirect(request, 'Missing OAuth authorization code.')
-  }
-
   try {
+    const provider = supportedProviderSchema.parse(rawProvider)
+
+    const url = new URL(request.url)
+    const code = url.searchParams.get('code')
+    const error = url.searchParams.get('error')
+    const errorDescription = url.searchParams.get('error_description')
+
+    if (error || errorDescription) {
+      throw new Error(
+        `OAuth provider error: ${error || 'unknown'}. ${
+          errorDescription || ''
+        }`.trim()
+      )
+    }
+
+    if (!code) {
+      throw new Error('No code returned from OAuth provider.')
+    }
+
     const oauthProfile = await getOAuthProfile(provider, code)
     const email = normalizeEmail(oauthProfile.email)
 
@@ -238,18 +229,19 @@ export async function GET(
       })
     }
 
-    const response = await createAuthenticationSuccessResponse(
+    return createAuthenticationSuccessResponse(
       { id: user.id },
       { returnTo: '/' }
     )
-
-    return response
   } catch (error) {
-    return createAuthRedirect(
-      request,
-      error instanceof Error
-        ? error.message
-        : 'Could not sign you in with this OAuth provider.'
+    const errorMessage =
+      error instanceof Error ? error.message : 'An unknown error occurred.'
+
+    return NextResponse.redirect(
+      new URL(
+        `/auth/login?error=${encodeURIComponent(errorMessage)}`,
+        request.url
+      )
     )
   }
 }
