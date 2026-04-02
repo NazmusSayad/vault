@@ -7,8 +7,11 @@ import {
   BetterDialog,
   BetterDialogContent,
 } from '@/components/ui/better-dialog'
-import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
+import {
+  decryptRecordClient,
+  encryptRecordClient,
+} from '@/lib/record-encrypt-client'
 import { updateVaultRecordAction } from '@/server/vault/vault-record'
 import { useAuthStore } from '@/store/use-auth-store'
 import { NoteIcon } from '@hugeicons/core-free-icons'
@@ -18,8 +21,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { RecordEditor, type RecordField } from './record-editor'
-
-const encryption = new EncryptionClient()
 
 function getRecordDialogHref(
   pathname: string,
@@ -49,8 +50,8 @@ type RecordDialogProps = {
     name: string
     type: string
     updatedAt: string
-    data?: Record<string, string>
-    metadata?: [string, string][]
+    data?: string
+    metadata?: string
   }[]
 }
 
@@ -60,8 +61,8 @@ type RecordDialogContentProps = {
     name: string
     type: string
     updatedAt: string
-    data?: Record<string, string>
-    metadata?: [string, string][]
+    data?: string
+    metadata?: string
   } | null
   vault: {
     id: string
@@ -75,6 +76,7 @@ type DecryptedRecord = {
   name: string
   type: string
   data: RecordField[]
+  metadata: RecordField[]
 }
 
 type EditableRecordProps = {
@@ -85,19 +87,8 @@ type EditableRecordProps = {
   }
 }
 
-function parseRecordData(
-  value: [string, string][] | undefined,
-  map: Record<string, string> | undefined
-) {
-  if (value && value.length > 0) {
-    return value
-  }
-
-  if (!map) {
-    return []
-  }
-
-  return Object.entries(map)
+function createDataMap(fields: RecordField[]) {
+  return Object.fromEntries(fields)
 }
 
 export function RecordDialog({ vault, records }: RecordDialogProps) {
@@ -135,9 +126,20 @@ function RecordDialogContent({ record, vault }: RecordDialogContentProps) {
         throw new Error('Record not found.')
       }
 
+      if (!auth) {
+        throw new Error('Unlock this vault first.')
+      }
+
+      const decrypted = await decryptRecordClient({
+        key: auth,
+        data: record.data,
+        metadata: record.metadata,
+      })
+
       return {
         ...record,
-        data: parseRecordData(record.metadata, record.data),
+        data: decrypted.data ? Object.entries(decrypted.data) : [],
+        metadata: decrypted.metadata ?? [],
       }
     },
     queryKey: ['vault-record', vault.id, record?.id, record?.updatedAt, auth],
@@ -205,12 +207,14 @@ function EditableRecord({ record, vault }: EditableRecordProps) {
   )
   const formRef = useRef<HTMLFormElement>(null)
   const [data, setData] = useState<RecordField[]>(record.data)
+  const [metadata, setMetadata] = useState<RecordField[]>(record.metadata)
   const [error, setError] = useState('')
   const [name, setName] = useState(record.name)
   const [type, setType] = useState(record.type)
   const updateRecordMutation = useMutation({
     mutationFn: async (input: {
       data: RecordField[]
+      metadata: RecordField[]
       name: string
       type: string
     }) => {
@@ -218,12 +222,15 @@ function EditableRecord({ record, vault }: EditableRecordProps) {
         throw new Error('Unlock this vault first.')
       }
 
+      const encrypted = await encryptRecordClient({
+        key: auth,
+        data: createDataMap(input.data),
+        metadata: input.metadata,
+      })
+
       return updateVaultRecordAction({
-        auth,
-        data: await encryption.encrypt({
-          key: auth,
-          data: JSON.stringify(input.data),
-        }),
+        data: encrypted.data ?? undefined,
+        metadata: encrypted.metadata ?? undefined,
         name: input.name,
         recordId: record.id,
         type: input.type,
@@ -271,6 +278,7 @@ function EditableRecord({ record, vault }: EditableRecordProps) {
           name={name}
           type={type}
           data={data}
+          metadata={metadata}
           error={error}
           isPending={updateRecordMutation.isPending}
           hideSubmit
@@ -278,12 +286,14 @@ function EditableRecord({ record, vault }: EditableRecordProps) {
           onNameChange={setName}
           onTypeChange={setType}
           onDataChange={setData}
+          onMetadataChange={setMetadata}
           onSubmit={(event) => {
             event.preventDefault()
 
             updateRecordMutation.mutate(
               {
                 data,
+                metadata,
                 name,
                 type,
               },
