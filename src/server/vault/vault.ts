@@ -9,9 +9,9 @@ import { prisma } from '@/server/db'
 import { z } from 'zod'
 
 const createVaultSchema = z.object({
-  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
-  icon: z.string().trim().optional(),
   name: z.string().trim().min(1, 'Enter a vault name.'),
+  auth: z.string().trim().min(4, 'Enter a vault PIN.'),
+  icon: z.string().trim().optional(),
 })
 
 function createVaultAuthHash(auth: string) {
