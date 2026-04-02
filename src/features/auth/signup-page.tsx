@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/input-otp'
 import { Spinner } from '@/components/ui/spinner'
 import { queryClient } from '@/lib/query-client'
-import { getSocialAuthUrlAction } from '@/server/auth/sign-in'
+import { getSocialAuthUrlAction } from '@/server/auth/oauth'
 import {
   confirmSignUpOTPAction,
   requestSignUpOTPAction,
