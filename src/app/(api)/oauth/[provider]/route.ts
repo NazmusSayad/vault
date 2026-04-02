@@ -4,7 +4,6 @@ import {
   normalizeEmail,
 } from '@/server/auth/auth-helpers'
 import { createAuthenticationSuccessResponse } from '@/server/auth/session'
-import { OAUTH_STATE_COOKIE_NAME, SECURE_COOKIES } from '@/server/constants'
 import { prisma } from '@/server/db'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -25,21 +24,9 @@ function parseProvider(value: string): OAuthProvider | null {
 }
 
 function createAuthRedirect(request: NextRequest, message: string) {
-  const response = NextResponse.redirect(
+  return NextResponse.redirect(
     new URL(`/auth/login?error=${encodeURIComponent(message)}`, request.url)
   )
-
-  response.cookies.set({
-    name: OAUTH_STATE_COOKIE_NAME,
-    value: '',
-    httpOnly: true,
-    maxAge: 0,
-    path: '/',
-    sameSite: 'lax',
-    secure: SECURE_COOKIES,
-  })
-
-  return response
 }
 
 async function exchangeGoogleCodeForProfile(
@@ -225,13 +212,6 @@ export async function GET(
     return createAuthRedirect(request, 'Missing OAuth authorization code.')
   }
 
-  const state = url.searchParams.get('state')
-  const expectedState = request.cookies.get(OAUTH_STATE_COOKIE_NAME)?.value
-
-  if (!state || expectedState !== `${provider}:${state}`) {
-    return createAuthRedirect(request, 'Invalid OAuth state. Please try again.')
-  }
-
   try {
     const oauthProfile = await getOAuthProfile(provider, code)
     const email = normalizeEmail(oauthProfile.email)
@@ -262,16 +242,6 @@ export async function GET(
       { id: user.id },
       { returnTo: '/' }
     )
-
-    response.cookies.set({
-      name: OAUTH_STATE_COOKIE_NAME,
-      value: '',
-      httpOnly: true,
-      maxAge: 0,
-      path: '/',
-      sameSite: 'lax',
-      secure: SECURE_COOKIES,
-    })
 
     return response
   } catch (error) {

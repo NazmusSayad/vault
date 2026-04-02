@@ -69,7 +69,7 @@ function RecordCreateDialogContent({
   const [data, setData] = useState<RecordField[]>(createInitialFields)
   const [error, setError] = useState('')
   const [name, setName] = useState('')
-  const [type, setType] = useState('NOTE')
+  const [type, setType] = useState('')
   const createRecordMutation = useMutation({
     mutationFn: async (input: {
       data: RecordField[]

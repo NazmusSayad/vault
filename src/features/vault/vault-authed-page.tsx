@@ -16,28 +16,11 @@ import {
   getRecordDialogHref,
   RecordDialog,
 } from '@/features/record/view-record-dialog'
-import {
-  File01Icon,
-  Key02Icon,
-  NoteIcon,
-  SquareLock02Icon,
-} from '@hugeicons/core-free-icons'
+import { File01Icon, NoteIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useVaultContext } from './contexts/vault-context'
-
-function getRecordTypeIcon(type: string) {
-  if (type === 'PASSWORD') {
-    return SquareLock02Icon
-  }
-
-  if (type === 'API_KEY') {
-    return Key02Icon
-  }
-
-  return NoteIcon
-}
 
 export function VaultAuthedPage() {
   const pathname = usePathname()
@@ -141,7 +124,7 @@ export function VaultAuthedPage() {
                           >
                             <span className="bg-muted flex size-9 items-center justify-center rounded-xl">
                               <HugeiconsIcon
-                                icon={getRecordTypeIcon(record.type)}
+                                icon={NoteIcon}
                                 className="size-4"
                               />
                             </span>

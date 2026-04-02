@@ -4,22 +4,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Add01Icon,
-  Delete02Icon,
-  Key02Icon,
-  NoteIcon,
-  SquareLock02Icon,
-} from '@hugeicons/core-free-icons'
+import { Add01Icon, Delete02Icon, NoteIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { FormEvent, RefObject } from 'react'
 
@@ -41,28 +28,8 @@ type RecordEditorProps = {
   type: string
 }
 
-const recordTypes = ['PASSWORD', 'API_KEY', 'NOTE']
-
 export function createEmptyRecordField(): RecordField {
   return ['', '']
-}
-
-function getRecordTypeIcon(type: string) {
-  if (type === 'PASSWORD') {
-    return SquareLock02Icon
-  }
-
-  if (type === 'API_KEY') {
-    return Key02Icon
-  }
-
-  return NoteIcon
-}
-
-function getRecordTypeValue(value: string) {
-  const recordType = recordTypes.find((type) => type === value)
-
-  return recordType ?? 'NOTE'
 }
 
 export function RecordEditor({
@@ -98,22 +65,12 @@ export function RecordEditor({
 
         <div className="space-y-2">
           <label className="text-sm font-medium">Record type</label>
-          <Select
+          <Input
+            placeholder="Record type"
             value={type}
             disabled={disabled}
-            onValueChange={(value) => onTypeChange(getRecordTypeValue(value))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a type" />
-            </SelectTrigger>
-            <SelectContent>
-              {recordTypes.map((recordType) => (
-                <SelectItem key={recordType} value={recordType}>
-                  {recordType}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(event) => onTypeChange(event.target.value)}
+          />
         </div>
       </div>
 
@@ -122,10 +79,7 @@ export function RecordEditor({
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className="bg-muted flex size-10 items-center justify-center rounded-2xl">
-                <HugeiconsIcon
-                  icon={getRecordTypeIcon(type)}
-                  className="size-4"
-                />
+                <HugeiconsIcon icon={NoteIcon} className="size-4" />
               </span>
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold tracking-tight">
