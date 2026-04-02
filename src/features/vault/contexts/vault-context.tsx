@@ -1,7 +1,7 @@
 'use client'
 
 import { LoadingSection } from '@/components/loading'
-import { getVaultRecordsAction } from '@/server/vault/vault'
+import { getVaultRecordsAction } from '@/server/vault/vault-record'
 import { useAuthStore } from '@/store/use-auth-store'
 import { nonNullable } from '@/utils/basic'
 import { useQuery } from '@tanstack/react-query'
