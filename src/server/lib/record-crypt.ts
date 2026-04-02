@@ -1,11 +1,10 @@
 import 'server-only'
 
 import { PublicRecordDataType, PublicRecordMetadataType } from '@/lib/schema'
-import { JsonValue } from '@prisma/client/runtime/client'
 
 type EncryptRecordInput = {
-  data?: PublicRecordDataType
-  metadata?: PublicRecordMetadataType
+  data?: PublicRecordDataType | null
+  metadata?: PublicRecordMetadataType | null
 }
 
 type EncryptRecordOutput = {
@@ -24,8 +23,8 @@ export async function encryptRecord({
 }
 
 type DecryptRecordInput = {
-  data?: JsonValue
-  metadata?: JsonValue
+  data?: string | null
+  metadata?: string | null
 }
 
 type DecryptRecordOutput = {
@@ -34,7 +33,7 @@ type DecryptRecordOutput = {
 }
 
 export async function decryptRecord(
-  input: Partial<DecryptRecordInput>
+  input: DecryptRecordInput
 ): Promise<DecryptRecordOutput> {
   return {
     data: typeof input.data === 'string' ? JSON.parse(input.data) : undefined,

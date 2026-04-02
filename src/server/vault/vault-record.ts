@@ -142,17 +142,12 @@ export async function createVaultRecordAction(
     authHash: vault.testAuthHash,
   })
 
-  const encryptedRecord = await encryptRecord({
-    data: body.data ?? {},
-    metadata: body.metadata ?? [],
-  })
-
   await prisma.vaultRecord.create({
     data: {
       name: body.name,
       type: body.type,
       vaultId: body.vaultId,
-      ...encryptedRecord,
+      ...(await encryptRecord(body)),
     },
   })
 }
@@ -185,13 +180,11 @@ export async function updateVaultRecordAction(
   }
 
   await prisma.vaultRecord.update({
-    where: {
-      id: existingRecord.id,
-    },
+    where: { id: existingRecord.id },
     data: {
-      data: await encryptRecord(body),
       name: body.name,
       type: body.type,
+      ...(await encryptRecord(body)),
     },
   })
 }
