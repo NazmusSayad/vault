@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/store/use-auth-store'
 import { redirect } from 'next/navigation'
 import { Hero } from './components/hero'
+import { Navbar } from './components/navbar'
 
 export function LandingPage({ allowRedirect }: { allowRedirect?: boolean }) {
   const status = useAuthStore((state) => state.status)
@@ -13,6 +14,7 @@ export function LandingPage({ allowRedirect }: { allowRedirect?: boolean }) {
 
   return (
     <main>
+      <Navbar />
       <Hero />
     </main>
   )
