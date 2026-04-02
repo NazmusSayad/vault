@@ -1,8 +1,6 @@
 'use client'
 
-import { Logo } from '@/components/brand/logo'
 import { Loading } from '@/components/loading'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { BetterScrollAreaFaded } from '@/components/ui/better-scroll-area'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { SheetClose } from '@/components/ui/sheet'
+import { UserAvatar } from '@/components/user-avatar'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/server/auth/session'
 import { getVaultsAction } from '@/server/vault/vault'
@@ -40,7 +39,6 @@ export function VaultSidebarDesktop({
 }) {
   const pathname = usePathname()
 
-  const user = useAuthStore((state) => state.user)
   const vaultAuthMap = useAuthStore((state) => state.vaultAuthByVaultId)
 
   const vaultsQuery = useQuery({
@@ -82,9 +80,41 @@ export function VaultSidebarDesktop({
       )}
     >
       <div className="flex items-center gap-4 border-b p-3 py-2.5">
-        <Link href="/vault">
-          <Logo className="size-8" />
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+              className="size-9 rounded-full"
+            >
+              <UserAvatar className="size-9" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href="/account">
+                <HugeiconsIcon icon={UserCircleIcon} /> Account
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isSigningOut}
+              onSelect={(event) => {
+                event.preventDefault()
+                void handleSignOut()
+              }}
+            >
+              {isSigningOut ? (
+                <Loading className="size-4" />
+              ) : (
+                <HugeiconsIcon icon={Logout02Icon} />
+              )}
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Input
           placeholder="Search Vault"
@@ -171,8 +201,8 @@ export function VaultSidebarDesktop({
         </BetterScrollAreaFaded>
       )}
 
-      <div className="flex flex-col gap-2 border-t p-3">
-        {!noVaultAvailable && (
+      {!noVaultAvailable && (
+        <div className="flex flex-col gap-2 border-t p-3">
           <Button
             variant="outline"
             className="w-full"
@@ -181,50 +211,8 @@ export function VaultSidebarDesktop({
             <HugeiconsIcon icon={WalletAdd01Icon} className="size-4" />
             Create new vault
           </Button>
-        )}
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="lg" variant="outline" className="w-full gap-3 px-2">
-              <Avatar className="size-6">
-                <AvatarImage
-                  src={user?.avatarUrl || undefined}
-                  alt={user?.name}
-                />
-                <AvatarFallback>{user?.name || 'Account'}</AvatarFallback>
-              </Avatar>
-              <span className="truncate">{user?.name || 'Account'}</span>
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align="end"
-            style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
-          >
-            <DropdownMenuItem asChild>
-              <Link href="/account">
-                <HugeiconsIcon icon={UserCircleIcon} /> Account
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={isSigningOut}
-              onSelect={(event) => {
-                event.preventDefault()
-                void handleSignOut()
-              }}
-            >
-              {isSigningOut ? (
-                <Loading className="size-4" />
-              ) : (
-                <HugeiconsIcon icon={Logout02Icon} />
-              )}
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+        </div>
+      )}
 
       <VaultCreateDialog
         open={isCreateVaultDialogOpen}
