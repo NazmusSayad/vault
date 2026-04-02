@@ -1,12 +1,9 @@
 'use server'
 
+import { normalizeEmail } from '@/server/auth/auth-helpers'
+import { verifyPassword } from '@/server/auth/password'
 import { createSessionUser } from '@/server/auth/session'
-import {
-  getCurrentRequestMetadata,
-  getPasswordAuthenticationOptions,
-  workos,
-} from '@/server/auth/shared'
-import { getAuthFeedbackFromError } from '@/server/auth/verification'
+import { prisma } from '@/server/db'
 import { z } from 'zod'
 
 const signInSchema = z.object({
@@ -16,26 +13,31 @@ const signInSchema = z.object({
 
 export async function signInAction(input: z.infer<typeof signInSchema>) {
   const body = signInSchema.parse(input)
+  const email = normalizeEmail(body.email)
+  const user = await prisma.user.findUnique({
+    where: { email },
+  })
 
-  try {
-    const authentication = await workos.userManagement.authenticateWithPassword(
-      getPasswordAuthenticationOptions(
-        await getCurrentRequestMetadata(),
-        body.email,
-        body.password
-      )
+  if (!user) {
+    throw new Error('No account found for this email address.')
+  }
+
+  if (!user.password) {
+    throw new Error(
+      'This account currently uses social sign-in. Use social sign-in or reset your password.'
     )
+  }
 
-    return {
-      user: await createSessionUser(authentication.user),
-    }
-  } catch (error) {
-    const feedback = await getAuthFeedbackFromError(error)
+  const isPasswordValid = await verifyPassword({
+    hash: user.password,
+    password: body.password,
+  })
 
-    if (feedback.error) {
-      throw new Error(feedback.error)
-    }
+  if (!isPasswordValid) {
+    throw new Error('Incorrect password.')
+  }
 
-    return feedback
+  return {
+    user: await createSessionUser(user),
   }
 }

@@ -2,10 +2,10 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { queryClient } from '@/lib/query-client'
 import { signInAction } from '@/server/auth/sign-in'
 import { getSocialAuthUrlAction } from '@/server/auth/social'
-import { verifyEmailAction } from '@/server/auth/verification'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -14,65 +14,29 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { FormEvent, useState } from 'react'
 
-type FeedbackState = {
-  error?: string
-  notice?: string
-  pendingEmail?: string
-}
-
 export function LoginPage() {
   const searchParams = useSearchParams()
   const setSession = useAuthStore((state) => state.setSession)
-  const [feedback, setFeedback] = useState<FeedbackState>({
-    error: searchParams.get('error') ?? undefined,
-    notice: searchParams.get('notice') ?? undefined,
-    pendingEmail: searchParams.get('pendingEmail') ?? undefined,
-  })
+  const [error, setError] = useState(searchParams.get('error') ?? undefined)
   const signInMutation = useMutation({
     mutationFn: signInAction,
     onMutate: () => {
-      setFeedback({})
+      setError(undefined)
     },
     onSuccess: (result) => {
-      if ('user' in result && result.user) {
-        setSession(result.user)
-        queryClient.setQueryData(['auth-session'], { user: result.user })
-        window.location.assign('/')
-        return
-      }
-
-      setFeedback({
-        notice: 'notice' in result ? result.notice : undefined,
-        pendingEmail:
-          'pendingEmail' in result ? result.pendingEmail : undefined,
-      })
-    },
-  })
-  const verifyMutation = useMutation({
-    mutationFn: verifyEmailAction,
-    onSuccess: (result) => {
-      if ('user' in result && result.user) {
-        setSession(result.user)
-        queryClient.setQueryData(['auth-session'], { user: result.user })
-        window.location.assign('/')
-        return
-      }
-
-      setFeedback({
-        notice: 'notice' in result ? result.notice : undefined,
-        pendingEmail:
-          'pendingEmail' in result ? result.pendingEmail : undefined,
-      })
+      setSession(result.user)
+      queryClient.setQueryData(['auth-session'], { user: result.user })
+      window.location.assign('/')
     },
   })
   const socialAuthMutation = useMutation({
     mutationFn: (provider: 'GitHubOAuth' | 'GoogleOAuth') =>
       getSocialAuthUrlAction(provider),
     onSuccess: (result) => {
-      const { url } = result
-      window.location.assign(url)
+      window.location.assign(result.url)
     },
   })
+  const isBusy = signInMutation.isPending || socialAuthMutation.isPending
 
   function handleSignInSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -85,34 +49,12 @@ export function LoginPage() {
         password: String(formData.get('password') ?? ''),
       },
       {
-        onError: (error) => {
-          setFeedback({
-            error:
-              error instanceof Error ? error.message : 'Could not sign you in.',
-          })
-        },
-      }
-    )
-  }
-
-  function handleVerifySubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-
-    verifyMutation.mutate(
-      {
-        code: String(formData.get('code') ?? '').trim(),
-      },
-      {
-        onError: (error) => {
-          setFeedback((current) => ({
-            ...current,
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Could not verify your email.',
-          }))
+        onError: (nextError) => {
+          setError(
+            nextError instanceof Error
+              ? nextError.message
+              : 'Could not sign you in.'
+          )
         },
       }
     )
@@ -129,40 +71,10 @@ export function LoginPage() {
             </p>
           </div>
 
-          {(feedback.error || feedback.notice) && (
-            <div className="mt-6 space-y-3">
-              {feedback.error && (
-                <div className="border-destructive/20 bg-destructive/10 rounded-2xl border px-4 py-3 text-sm">
-                  {feedback.error}
-                </div>
-              )}
-              {feedback.notice && (
-                <div className="border-primary/15 bg-primary/10 rounded-2xl border px-4 py-3 text-sm">
-                  {feedback.notice}
-                </div>
-              )}
+          {error && (
+            <div className="border-destructive/20 bg-destructive/10 mt-6 rounded-2xl border px-4 py-3 text-sm">
+              {error}
             </div>
-          )}
-
-          {feedback.pendingEmail && (
-            <form onSubmit={handleVerifySubmit} className="mt-6 space-y-4">
-              <Input
-                name="code"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                placeholder="Verification code"
-                required
-              />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={verifyMutation.isPending}
-              >
-                Confirm email
-              </Button>
-            </form>
           )}
 
           <form onSubmit={handleSignInSubmit} className="mt-6 space-y-4">
@@ -171,20 +83,19 @@ export function LoginPage() {
               type="email"
               placeholder="name@company.com"
               required
+              disabled={isBusy}
             />
             <Input
               name="password"
               type="password"
               placeholder="Password"
               required
+              disabled={isBusy}
             />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={signInMutation.isPending}
-            >
+            <Button type="submit" className="w-full" disabled={isBusy}>
               Sign in
+              {signInMutation.isPending && <Spinner />}
             </Button>
           </form>
 
@@ -208,16 +119,15 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with GitHub"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={socialAuthMutation.isPending}
+              disabled={isBusy}
               onClick={() => {
                 socialAuthMutation.mutate('GitHubOAuth', {
-                  onError: (error) => {
-                    setFeedback({
-                      error:
-                        error instanceof Error
-                          ? error.message
-                          : 'Could not start GitHub sign in.',
-                    })
+                  onError: (nextError) => {
+                    setError(
+                      nextError instanceof Error
+                        ? nextError.message
+                        : 'Could not start GitHub sign in.'
+                    )
                   },
                 })
               }}
@@ -229,16 +139,15 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with Google"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={socialAuthMutation.isPending}
+              disabled={isBusy}
               onClick={() => {
                 socialAuthMutation.mutate('GoogleOAuth', {
-                  onError: (error) => {
-                    setFeedback({
-                      error:
-                        error instanceof Error
-                          ? error.message
-                          : 'Could not start Google sign in.',
-                    })
+                  onError: (nextError) => {
+                    setError(
+                      nextError instanceof Error
+                        ? nextError.message
+                        : 'Could not start Google sign in.'
+                    )
                   },
                 })
               }}

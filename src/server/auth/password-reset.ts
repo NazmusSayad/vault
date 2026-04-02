@@ -1,70 +1,98 @@
 'use server'
 
-import { workos } from '@/server/auth/shared'
+import { normalizeEmail } from '@/server/auth/auth-helpers'
+import { resetPasswordOTPGenerator } from '@/server/auth/auth-otp'
+import { hashPassword } from '@/server/auth/password'
+import { createSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
+import { sendOtpEmail } from '@/server/lib/mailer'
 import { z } from 'zod'
 
-const forgotPasswordSchema = z.object({
+const requestResetPasswordOTPSchema = z.object({
   email: z.email('Enter a valid email address.'),
 })
 
-const resetPasswordSchema = z.object({
-  newPassword: z.string().min(1, 'Enter your new password.'),
-  token: z.string().trim().min(1, 'This reset link is missing its token.'),
+const confirmResetPasswordOTPSchema = z.object({
+  email: z.email('Enter a valid email address.'),
+  otp: z.string().length(6, 'Enter the six-digit code.'),
+  password: z.string().min(6, 'Password must be at least 6 characters long.'),
+  tokens: z.array(z.string().min(1)).min(1),
 })
 
-export async function forgotPasswordAction(
-  input: z.infer<typeof forgotPasswordSchema>
+export async function requestResetPasswordOTPAction(
+  input: z.infer<typeof requestResetPasswordOTPSchema>
 ) {
-  const body = forgotPasswordSchema.parse(input)
+  const body = requestResetPasswordOTPSchema.parse(input)
+  const email = normalizeEmail(body.email)
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+    },
+  })
 
-  try {
-    await workos.userManagement.createPasswordReset({
-      email: body.email,
-    })
-  } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : 'Could not start the password reset flow.'
-    )
+  if (!user) {
+    throw new Error('No account found for this email address.')
   }
 
+  const otp = await resetPasswordOTPGenerator.createToken({
+    email,
+    userId: user.id,
+  })
+
+  await sendOtpEmail({
+    description: 'Use this code to reset your KeyVoid password.',
+    email,
+    otp: otp.otp,
+    subject: 'Reset your KeyVoid password',
+  })
+
   return {
-    notice: 'If an account matches that email, WorkOS will send a reset link.',
-    success: true,
+    email,
+    token: otp.token,
   }
 }
 
-export async function resetPasswordAction(
-  input: z.infer<typeof resetPasswordSchema>
+export async function confirmResetPasswordOTPAction(
+  input: z.infer<typeof confirmResetPasswordOTPSchema>
 ) {
-  const body = resetPasswordSchema.parse(input)
+  const body = confirmResetPasswordOTPSchema.parse(input)
+  const email = normalizeEmail(body.email)
+  const payload = await resetPasswordOTPGenerator.verifyToken(
+    body.tokens,
+    body.otp
+  )
 
-  try {
-    const { user } = await workos.userManagement.resetPassword({
-      newPassword: body.newPassword,
-      token: body.token,
-    })
-
-    await prisma.user.update({
-      where: {
-        workosId: user.id,
-      },
-      data: {
-        authChangedAt: new Date(),
-        isVerified: user.emailVerified,
-      },
-    })
-  } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : 'Could not reset your password.'
-    )
+  if (payload.email !== email) {
+    throw new Error('The verification code does not match this email.')
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+  })
+
+  if (!user || normalizeEmail(user.email) !== email) {
+    throw new Error('User not found.')
+  }
+
+  const prevPasswordChangedAt = user.passwordChangedAt
+  if (
+    prevPasswordChangedAt &&
+    prevPasswordChangedAt.getTime() >= payload.iat * 1000
+  ) {
+    throw new Error('This code has already been used. Request a new one.')
+  }
+
+  const newPasswordChangedAt = new Date()
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: await hashPassword(body.password),
+      passwordChangedAt: newPasswordChangedAt,
+    },
+  })
+
   return {
-    redirectTo:
-      '/auth/login?notice=Your%20password%20has%20been%20reset.%20Sign%20in%20with%20your%20new%20password.',
-    success: true,
+    user: await createSessionUser(updatedUser),
   }
 }

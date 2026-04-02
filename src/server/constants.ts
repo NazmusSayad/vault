@@ -2,7 +2,7 @@ import { serverEnv } from '@/env.server'
 import ms from 'ms'
 
 export const SESSION_COOKIE_NAME = 'vault-app-session'
-export const PENDING_AUTH_COOKIE_NAME = 'vault-workos-pending-auth'
+export const OAUTH_STATE_COOKIE_NAME = 'vault-oauth-state'
 
 export const SESSION_MAX_AGE = ms('30d')
 export const SESSION_MAX_AGE_SECONDS = Math.floor(SESSION_MAX_AGE / 1000)
