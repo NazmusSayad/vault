@@ -21,7 +21,7 @@ import { SquareUnlock01Icon, WalletAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { resolveVaultIcon } from './constants/vault-icons'
 import { VaultCreateDialog } from './vault-create-dialog'
@@ -33,13 +33,11 @@ export function VaultSidebarDesktop({
   mobileMode?: boolean
   triggerSheetClose?: () => void
 }) {
-  const router = useRouter()
   const pathname = usePathname()
 
   const user = useAuthStore((state) => state.user)
   const vaultAuthMap = useAuthStore((state) => state.vaultAuthByVaultId)
 
-  const clearSession = useAuthStore((state) => state.clearSession)
   const vaultsQuery = useQuery({
     queryFn: () => getVaultsAction(),
     queryKey: ['vaults'],
@@ -62,8 +60,7 @@ export function VaultSidebarDesktop({
 
     try {
       await signOutAction()
-      clearSession()
-      router.push('/auth/login')
+      window.location.href = '/'
     } finally {
       setIsSigningOut(false)
     }

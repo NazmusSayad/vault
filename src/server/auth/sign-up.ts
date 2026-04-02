@@ -46,6 +46,9 @@ export async function requestSignUpOTPAction(
     email,
     otp: otp.otp,
     subject: 'Verify your KeyVoid registration',
+  }).catch((error) => {
+    console.error('Failed to send OTP email:', error)
+    console.log(otp)
   })
 
   return {

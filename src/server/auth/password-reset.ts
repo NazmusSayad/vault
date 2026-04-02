@@ -45,6 +45,9 @@ export async function requestResetPasswordOTPAction(
     email,
     otp: otp.otp,
     subject: 'Reset your KeyVoid password',
+  }).catch((error) => {
+    console.error('Failed to send OTP email:', error)
+    console.log(otp)
   })
 
   return {
