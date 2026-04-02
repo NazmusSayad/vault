@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "next dev",
     "start": "next start",
+    "dev:icons": "tsx --watch ./src/scripts/build-icons.tsx",
     "build": "pnpm run db:init && pnpm run build:icons && next build",
     "build:icons": "tsx ./src/scripts/build-icons.tsx",
     "db:init": "prisma generate && prisma db push",
