@@ -9,10 +9,7 @@ import {
 } from '@/components/ui/better-dialog'
 import { EncryptionClient } from '@/lib/encryption/encryption.client'
 import { queryClient } from '@/lib/query-client'
-import {
-  getVaultRecordAction,
-  updateVaultRecordAction,
-} from '@/server/vault/vault-record'
+import { updateVaultRecordAction } from '@/server/vault/vault-record'
 import { useAuthStore } from '@/store/use-auth-store'
 import { NoteIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -43,17 +40,37 @@ function getRecordDialogHref(
 }
 
 type RecordDialogProps = {
-  vaultId: string
+  vault: {
+    id: string
+    name: string
+  }
+  records: {
+    id: string
+    name: string
+    type: string
+    updatedAt: string
+    vaultId: string
+    data: unknown
+  }[]
 }
 
 type RecordDialogContentProps = {
-  recordId: string
-  vaultId: string
+  record: {
+    id: string
+    name: string
+    type: string
+    updatedAt: string
+    vaultId: string
+    data: unknown
+  } | null
+  vault: {
+    id: string
+    name: string
+  }
 }
 
 type DecryptedRecord = {
   id: string
-  createdAt: string
   updatedAt: string
   name: string
   type: string
@@ -63,7 +80,10 @@ type DecryptedRecord = {
 
 type EditableRecordProps = {
   record: DecryptedRecord
-  vault: Awaited<ReturnType<typeof getVaultRecordAction>>['vault']
+  vault: {
+    id: string
+    name: string
+  }
 }
 
 function isRecordField(value: unknown): value is RecordField {
@@ -89,11 +109,20 @@ function parseRecordData(value: string) {
   return parsed
 }
 
-export function RecordDialog({ vaultId }: RecordDialogProps) {
+function parseEncryptedRecordData(value: unknown) {
+  if (typeof value !== 'string') {
+    throw new Error('Invalid record data.')
+  }
+
+  return value
+}
+
+export function RecordDialog({ vault, records }: RecordDialogProps) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const recordId = searchParams.get('record')?.trim() ?? ''
+  const record = records.find((item) => item.id === recordId) ?? null
 
   return (
     <BetterDialog
@@ -106,43 +135,34 @@ export function RecordDialog({ vaultId }: RecordDialogProps) {
       width="56rem"
     >
       {recordId && (
-        <RecordDialogContent
-          key={recordId}
-          recordId={recordId}
-          vaultId={vaultId}
-        />
+        <RecordDialogContent key={recordId} record={record} vault={vault} />
       )}
     </BetterDialog>
   )
 }
 
-function RecordDialogContent({ recordId, vaultId }: RecordDialogContentProps) {
+function RecordDialogContent({ record, vault }: RecordDialogContentProps) {
   const auth = useAuthStore(
-    (state) => state.vaultAuthByVaultId[vaultId] ?? null
+    (state) => state.vaultAuthByVaultId[vault.id] ?? null
   )
   const recordQuery = useQuery({
-    enabled: Boolean(auth),
+    enabled: Boolean(auth && record),
     queryFn: async () => {
-      const result = await getVaultRecordAction({
-        auth: auth!,
-        recordId,
-        vaultId,
-      })
+      if (!record) {
+        throw new Error('Record not found.')
+      }
 
       return {
-        record: {
-          ...result.record,
-          data: parseRecordData(
-            await encryption.decrypt({
-              key: auth!,
-              data: result.record.data,
-            })
-          ),
-        },
-        vault: result.vault,
+        ...record,
+        data: parseRecordData(
+          await encryption.decrypt({
+            key: auth!,
+            data: parseEncryptedRecordData(record.data),
+          })
+        ),
       }
     },
-    queryKey: ['vault-record', vaultId, recordId, auth],
+    queryKey: ['vault-record', vault.id, record?.id, record?.updatedAt, auth],
   })
 
   if (recordQuery.isPending) {
@@ -177,11 +197,26 @@ function RecordDialogContent({ recordId, vaultId }: RecordDialogContentProps) {
     )
   }
 
+  if (!record) {
+    return (
+      <BetterDialogContent
+        title="Could not load record"
+        description="This record could not be opened."
+        footerCancel
+      >
+        <Alert variant="destructive">
+          <AlertTitle>Record unavailable</AlertTitle>
+          <AlertDescription>Record not found.</AlertDescription>
+        </Alert>
+      </BetterDialogContent>
+    )
+  }
+
   return (
     <EditableRecord
-      key={recordQuery.data.record.updatedAt}
-      record={recordQuery.data.record}
-      vault={recordQuery.data.vault}
+      key={recordQuery.data.updatedAt}
+      record={recordQuery.data}
+      vault={vault}
     />
   )
 }

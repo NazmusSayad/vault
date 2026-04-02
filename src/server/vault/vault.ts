@@ -7,10 +7,6 @@ import { requireCurrentSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
 import { z } from 'zod'
 
-const getVaultSchema = z.object({
-  vaultId: z.string().trim().min(1, 'Vault is required.'),
-})
-
 const getVaultRecordsSchema = z.object({
   vaultId: z.string().trim().min(1, 'Vault is required.'),
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
@@ -78,6 +74,7 @@ function serializeVaultRecord(record: {
   type: string
   updatedAt: Date
   vaultId: string
+  data: unknown
 }) {
   return {
     id: record.id,
@@ -85,6 +82,7 @@ function serializeVaultRecord(record: {
     type: record.type,
     updatedAt: record.updatedAt.toISOString(),
     vaultId: record.vaultId,
+    data: record.data,
   }
 }
 
@@ -109,43 +107,6 @@ export async function getVaultsAction() {
   }
 }
 
-export async function getVaultAction(input: z.infer<typeof getVaultSchema>) {
-  const user = await requireCurrentSessionUser()
-  const body = getVaultSchema.parse(input)
-  const vault = await prisma.vault.findFirst({
-    where: {
-      id: body.vaultId,
-      ownerId: user.id,
-    },
-    include: {
-      _count: {
-        select: {
-          vaultRecords: true,
-        },
-      },
-      vaultRecords: {
-        orderBy: [{ updatedAt: 'desc' }],
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          updatedAt: true,
-          vaultId: true,
-        },
-      },
-    },
-  })
-
-  if (!vault) {
-    throw new Error('Vault not found.')
-  }
-
-  return {
-    vault: serializeVault(vault),
-    records: vault.vaultRecords.map(serializeVaultRecord),
-  }
-}
-
 export async function getVaultRecordsAction(
   input: z.infer<typeof getVaultRecordsSchema>
 ) {
@@ -161,6 +122,7 @@ export async function getVaultRecordsAction(
       vaultRecords: {
         orderBy: [{ updatedAt: 'desc' }],
         select: {
+          data: true,
           id: true,
           name: true,
           type: true,

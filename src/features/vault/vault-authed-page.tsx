@@ -144,7 +144,7 @@ export function VaultAuthedPage() {
               </section>
             )}
 
-            <RecordDialog vaultId={vault.id} />
+            <RecordDialog vault={vault} records={records} />
           </div>
         </div>
       </BetterScrollAreaFaded>

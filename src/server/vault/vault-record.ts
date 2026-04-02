@@ -10,12 +10,6 @@ import { z } from 'zod'
 
 const encryption = new EncryptionServer()
 
-const getVaultRecordSchema = z.object({
-  auth: z.string().trim().min(1, 'Enter a vault PIN.'),
-  recordId: z.string().trim().min(1, 'Record is required.'),
-  vaultId: z.string().trim().min(1, 'Vault is required.'),
-})
-
 const createVaultRecordSchema = z.object({
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
   data: z.string().trim().min(1, 'Record data is required.'),
@@ -57,58 +51,11 @@ function requireValidVaultAuth({
   }
 }
 
-function parseEncryptedRecordData(data: unknown) {
-  if (typeof data !== 'string') {
-    throw new Error('Invalid record data.')
-  }
-
-  return data
-}
-
 async function encryptVaultRecordData(data: string) {
   return encryption.encrypt({
     key: serverEnv.VAULT_ENCRYPTION_KEY,
     data,
   })
-}
-
-async function decryptVaultRecordData(data: string) {
-  return encryption.decrypt({
-    key: serverEnv.VAULT_ENCRYPTION_KEY,
-    data,
-  })
-}
-
-function serializeVaultSummary(vault: {
-  id: string
-  icon: string | null
-  name: string
-}) {
-  return {
-    id: vault.id,
-    icon: vault.icon,
-    name: vault.name,
-  }
-}
-
-function serializeVaultRecord(record: {
-  id: string
-  createdAt: Date
-  updatedAt: Date
-  name: string
-  type: string
-  data: string
-  vaultId: string
-}) {
-  return {
-    id: record.id,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-    name: record.name,
-    type: record.type,
-    data: record.data,
-    vaultId: record.vaultId,
-  }
 }
 
 function serializeVaultRecordListItem(record: {
@@ -146,49 +93,6 @@ async function getOwnedVault(vaultId: string, ownerId: string) {
   }
 
   return vault
-}
-
-export async function getVaultRecordAction(
-  input: z.infer<typeof getVaultRecordSchema>
-) {
-  const user = await requireCurrentSessionUser()
-  const body = getVaultRecordSchema.parse(input)
-  const record = await prisma.vaultRecord.findFirst({
-    where: {
-      id: body.recordId,
-      vaultId: body.vaultId,
-      vault: {
-        ownerId: user.id,
-      },
-    },
-    include: {
-      vault: {
-        select: {
-          icon: true,
-          id: true,
-          name: true,
-          testAuthHash: true,
-        },
-      },
-    },
-  })
-
-  if (!record) {
-    throw new Error('Record not found.')
-  }
-
-  requireValidVaultAuth({
-    auth: body.auth,
-    authHash: record.vault.testAuthHash,
-  })
-
-  return {
-    record: serializeVaultRecord({
-      ...record,
-      data: await decryptVaultRecordData(parseEncryptedRecordData(record.data)),
-    }),
-    vault: serializeVaultSummary(record.vault),
-  }
 }
 
 export async function createVaultRecordAction(
