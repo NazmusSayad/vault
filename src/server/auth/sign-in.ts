@@ -1,9 +1,9 @@
 'use server'
 
 import { normalizeEmail } from '@/server/auth/auth-helpers'
-import { verifyPassword } from '@/server/auth/password'
 import { createSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
+import { verifyPassword } from '@/server/lib/hash'
 import { z } from 'zod'
 
 const signInSchema = z.object({

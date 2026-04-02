@@ -4,10 +4,10 @@ import {
   getDefaultNameFromEmail,
   normalizeEmail,
 } from '@/server/auth/auth-helpers'
-import { registerOTPGenerator } from '@/server/auth/auth-otp'
-import { hashPassword } from '@/server/auth/password'
 import { createSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
+import { registerOTPGenerator } from '@/server/lib/auth-otp'
+import { hashPassword } from '@/server/lib/hash'
 import { sendOtpEmail } from '@/server/lib/mailer'
 import { z } from 'zod'
 

@@ -1,10 +1,10 @@
 'use server'
 
 import { normalizeEmail } from '@/server/auth/auth-helpers'
-import { resetPasswordOTPGenerator } from '@/server/auth/auth-otp'
-import { hashPassword } from '@/server/auth/password'
 import { createSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
+import { resetPasswordOTPGenerator } from '@/server/lib/auth-otp'
+import { hashPassword } from '@/server/lib/hash'
 import { sendOtpEmail } from '@/server/lib/mailer'
 import { z } from 'zod'
 
