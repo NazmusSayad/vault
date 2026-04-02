@@ -46,7 +46,7 @@ export async function createVaultAction(
 ) {
   const user = await requireCurrentSessionUser()
   const body = createVaultSchema.parse(input)
-  await prisma.vault.create({
+  const vault = await prisma.vault.create({
     data: {
       icon: body.icon || null,
       name: body.name,
@@ -54,4 +54,6 @@ export async function createVaultAction(
       testAuthHash: createVaultAuthHash(body.auth),
     },
   })
+
+  return PublicVault.parse(vault)
 }

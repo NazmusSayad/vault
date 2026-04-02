@@ -6,22 +6,17 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { RecordRow } from '@/features/record/components/record-row'
 import { RecordCreateDialog } from '@/features/record/record-create-dialog'
-import { getRecordDialogHref } from '@/features/record/view-record-dialog'
-import { File01Icon, NoteIcon } from '@hugeicons/core-free-icons'
+import { File01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
 import { useVaultContext } from './contexts/vault-context'
 
 export function VaultAuthedPage() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
   const { vault, records } = useVaultContext()
 
   return (
@@ -109,32 +104,7 @@ export function VaultAuthedPage() {
                   </TableHeader>
                   <TableBody>
                     {records.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="py-4">
-                          <Link
-                            href={getRecordDialogHref(
-                              pathname,
-                              searchParams,
-                              record.id
-                            )}
-                            className="hover:text-primary flex items-center gap-3 font-medium transition-colors"
-                          >
-                            <span className="bg-muted flex size-9 items-center justify-center rounded-xl">
-                              <HugeiconsIcon
-                                icon={NoteIcon}
-                                className="size-4"
-                              />
-                            </span>
-                            <span>{record.name}</span>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{record.type}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {new Date(record.updatedAt).toLocaleDateString()}
-                        </TableCell>
-                      </TableRow>
+                      <RecordRow key={record.id} record={record} />
                     ))}
                   </TableBody>
                 </Table>

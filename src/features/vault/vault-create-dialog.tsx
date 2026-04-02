@@ -74,7 +74,7 @@ function VaultCreateDialogContent({
     mutationFn: createVaultAction,
     onSuccess: async (result, variables) => {
       onOpenChange(false)
-      setVaultAuth(result.vault.id, variables.auth)
+      setVaultAuth(result.id, variables.auth)
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['vaults'] }),
@@ -82,7 +82,7 @@ function VaultCreateDialogContent({
       ])
 
       toast.success('Vault created.')
-      router.push(`/vault/${result.vault.id}`)
+      router.push(`/vault/${result.id}`)
     },
   })
 
