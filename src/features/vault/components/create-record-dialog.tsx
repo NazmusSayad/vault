@@ -22,9 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { RECORD_TYPES } from '@/features/vault/constants/types'
-import { buildRecordCreateFormSchema } from '@/features/vault/helpers/build-zod-schema'
+import {
+  buildRecordCreateFormSchema,
+  CreateRecordFormValues,
+  encryptAndPrepareData,
+} from '@/features/vault/helpers/build-zod-schema'
 import { queryClient } from '@/lib/query-client'
-import { encryptRecordClient } from '@/lib/record-encrypt-client'
 import { createVaultRecordAction } from '@/server/vault/vault-record'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { File01Icon } from '@hugeicons/core-free-icons'
@@ -41,33 +44,18 @@ type RecordCreateDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-type RecordCreateDialogContentProps = {
-  onOpenChange: (open: boolean) => void
-}
-
-export type CreateRecordFormValues = {
-  name: string
-  type: string
-  tags: string[]
-
-  data: Record<string, string>
-  metadata: Array<[string, string]>
-}
-
 export function CreateRecordDialog({
   open,
   onOpenChange,
 }: RecordCreateDialogProps) {
   return (
     <BetterDialog open={open} onOpenChange={onOpenChange}>
-      <CreateRecordDialogContent onOpenChange={onOpenChange} />
+      <CreateRecordDialogContent open={open} onOpenChange={onOpenChange} />
     </BetterDialog>
   )
 }
 
-function CreateRecordDialogContent({
-  onOpenChange,
-}: RecordCreateDialogContentProps) {
+function CreateRecordDialogContent({ onOpenChange }: RecordCreateDialogProps) {
   const { secret, vault } = useVaultContext()
   const [selectedType, setSelectedType] = useState('')
   const selectedRecordType = useMemo(
@@ -111,27 +99,12 @@ function CreateRecordDialogContent({
                 throw new Error('Unlock this vault first.')
               }
 
-              const metadata = values.metadata
-                .map(
-                  (field) =>
-                    [field[0].trim(), field[1].trim()] as [string, string]
-                )
-                .filter((field) => field[0].length > 0 && field[1].length > 0)
-
-              const encrypted = await encryptRecordClient({
-                key: secret,
-                data: values.data,
-                metadata: metadata.length > 0 ? metadata : undefined,
-              })
+              const encrypted = await encryptAndPrepareData(secret, values)
 
               await createVaultRecordAction({
                 auth: secret,
-                data: encrypted.data ?? undefined,
-                metadata: encrypted.metadata ?? undefined,
-                name: values.name,
-                tags: values.tags,
-                type: values.type,
                 vaultId: vault.id,
+                ...encrypted,
               })
 
               onOpenChange(false)
