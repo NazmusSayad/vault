@@ -1,7 +1,7 @@
 'use server'
 
 import { serverEnv } from '@/env.server'
-import { PublicRecord, PublicVault } from '@/lib/schema'
+import { PublicRecord, PublicVault } from '@/lib/public-schema'
 import { requireCurrentSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
 import { createHmac, timingSafeEqual } from 'node:crypto'

@@ -1,7 +1,7 @@
 'use server'
 
 import { serverEnv } from '@/env.server'
-import { SessionUser } from '@/lib/schema'
+import { SessionUser } from '@/lib/public-schema'
 import {
   clearSessionCookie,
   getSessionCookieValue,

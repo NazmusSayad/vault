@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { PublicRecordType } from '@/lib/schema'
+import type { PublicRecordType } from '@/lib/public-schema'
 import { cn } from '@/lib/utils'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'

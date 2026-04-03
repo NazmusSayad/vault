@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { TableCell, TableRow } from '@/components/ui/table'
-import type { PublicRecordType } from '@/lib/schema'
+import type { PublicRecordType } from '@/lib/public-schema'
 import {
   Delete02Icon,
   FolderEditIcon,
