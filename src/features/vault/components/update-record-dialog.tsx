@@ -1,34 +1,43 @@
 'use client'
 
-import { encryptAndPrepareData } from '@/features/vault/helpers/build-zod-schema'
+import {
+  CreateRecordFormValues,
+  encryptAndPrepareData,
+} from '@/features/vault/helpers/build-zod-schema'
+import { PublicRecordType } from '@/lib/public-schema'
 import { queryClient } from '@/lib/query-client'
-import { createVaultRecordAction } from '@/server/vault/vault-record'
+import { updateVaultRecordAction } from '@/server/vault/vault-record'
 import { toast } from 'sonner'
 import { useVaultContext } from '../contexts/vault-context'
 import { ConfigureRecordDialog } from './configure-record-dialog'
 
-type RecordCreateDialogProps = {
+type RecordUpdateDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  data: CreateRecordFormValues
+  record: PublicRecordType
 }
 
-export function CreateRecordDialog({
+export function UpdateRecordDialog({
   open,
+  data,
+  record,
   onOpenChange,
-}: RecordCreateDialogProps) {
+}: RecordUpdateDialogProps) {
   const { secret, vault } = useVaultContext()
 
   return (
     <ConfigureRecordDialog
       open={open}
       onOpenChange={onOpenChange}
+      defaultValues={data}
       onSubmit={async (values) => {
         try {
           const encrypted = await encryptAndPrepareData(secret, values)
 
-          await createVaultRecordAction({
-            auth: secret,
+          await updateVaultRecordAction({
             vaultId: vault.id,
+            recordId: record.id,
             ...encrypted,
           })
 
@@ -44,12 +53,12 @@ export function CreateRecordDialog({
             queryClient.invalidateQueries({ queryKey: ['vaults'] }),
           ])
 
-          toast.success('Record created.')
+          toast.success('Record updated.')
         } catch (mutationError) {
           throw new Error(
             mutationError instanceof Error
               ? mutationError.message
-              : 'Could not create the record.'
+              : 'Could not update the record.'
           )
         }
       }}
