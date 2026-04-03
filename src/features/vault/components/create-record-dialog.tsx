@@ -173,7 +173,7 @@ function CreateRecordDialogContent({
             disabled={createRecordMutation.isPending}
             className="space-y-6 disabled:pointer-events-none disabled:opacity-80"
           >
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
               <FormField
                 control={form.control}
                 name="name"
