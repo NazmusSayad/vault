@@ -16,8 +16,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Wrapper } from '@/components/wrapper'
-import { RecordRow } from '@/features/record/components/record-row'
-import { RecordCreateDialog } from '@/features/record/record-create-dialog'
 import {
   Delete02Icon,
   File01Icon,
@@ -27,6 +25,8 @@ import {
   NoteIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { RecordCreateDialog } from './components/record-create-dialog'
+import { RecordRow } from './components/record-row'
 import { resolveVaultIcon } from './constants/vault-icons'
 import { useVaultContext } from './contexts/vault-context'
 
