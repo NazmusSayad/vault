@@ -139,17 +139,19 @@ export function BetterDialogContent({
   const header = headerContent ? (
     headerContent
   ) : title || description ? (
-    <DialogHeader className="flex min-h-17 w-full flex-row items-center justify-between border-b px-4.5 pb-0.5">
+    <DialogHeader className="flex min-h-17 w-full flex-row items-center justify-between border-b px-4.5 py-2">
       <div className="flex flex-col items-start gap-0.5">
-        <DialogTitle className="text-base font-medium">{title}</DialogTitle>
-        <DialogDescription className="text-muted-foreground/75 text-sm text-[0.8125rem]">
+        <DialogTitle className="text-left text-base font-medium">
+          {title}
+        </DialogTitle>
+        <DialogDescription className="text-muted-foreground/75 text-left text-sm text-[0.8125rem]">
           {description}
         </DialogDescription>
       </div>
 
       {!hideCloseButton && (
         <DialogClose asChild>
-          <button className="bg-muted text-foreground hover:bg-destructive flex size-[1em] cursor-pointer items-center justify-center rounded-[0.25em] text-sm text-[2rem] transition-all hover:text-red-700">
+          <button className="bg-muted text-foreground hover:bg-destructive flex size-[1em] shrink-0 cursor-pointer items-center justify-center rounded-[0.25em] text-sm text-[2rem] transition-all hover:text-red-700">
             <svg
               width="0.4em"
               height="0.4em"
