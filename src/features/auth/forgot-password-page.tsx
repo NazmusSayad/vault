@@ -10,7 +10,6 @@ import {
   requestResetPasswordOTPAction,
 } from '@/server/auth/password-reset'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -24,32 +23,15 @@ export function ForgotPasswordPage() {
   const [flowData, setFlowData] = useState<ForgotPasswordFlowData | null>(null)
   const [error, setError] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
-  const requestMutation = useMutation({
-    mutationFn: requestResetPasswordOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-  })
-  const confirmMutation = useMutation({
-    mutationFn: confirmResetPasswordOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-    onSuccess: (result) => {
-      setSession(result.user)
-      queryClient.setQueryData(['auth-session'], { user: result.user })
-      window.location.assign('/')
-    },
-  })
-  const isBusy = requestMutation.isPending || confirmMutation.isPending
+  const [isResendingCode, setIsResendingCode] = useState(false)
 
   async function handleRequestSubmit(data: { email: string }) {
-    await requestMutation
-      .mutateAsync({
-        email: data.email,
-      })
+    setError(undefined)
+    setNotice(undefined)
+
+    await requestResetPasswordOTPAction({
+      email: data.email,
+    })
       .then((result) => {
         setFlowData({
           email: data.email,
@@ -75,12 +57,19 @@ export function ForgotPasswordPage() {
       return
     }
 
-    await confirmMutation
-      .mutateAsync({
-        email: flowData.email,
-        otp: data.otp,
-        password: data.password,
-        tokens: flowData.tokens,
+    setError(undefined)
+    setNotice(undefined)
+
+    await confirmResetPasswordOTPAction({
+      email: flowData.email,
+      otp: data.otp,
+      password: data.password,
+      tokens: flowData.tokens,
+    })
+      .then((result) => {
+        setSession(result.user)
+        queryClient.setQueryData(['auth-session'], { user: result.user })
+        window.location.assign('/')
       })
       .catch((nextError) => {
         setError(
@@ -96,27 +85,30 @@ export function ForgotPasswordPage() {
       return
     }
 
-    requestMutation.mutate(
-      {
-        email: flowData.email,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not resend the code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            ...flowData,
-            tokens: [...flowData.tokens, result.token].slice(-5),
-          })
-          setNotice('A fresh code is on the way.')
-        },
-      }
-    )
+    setError(undefined)
+    setNotice(undefined)
+    setIsResendingCode(true)
+
+    requestResetPasswordOTPAction({
+      email: flowData.email,
+    })
+      .then((result) => {
+        setFlowData({
+          ...flowData,
+          tokens: [...flowData.tokens, result.token].slice(-5),
+        })
+        setNotice('A fresh code is on the way.')
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not resend the code.'
+        )
+      })
+      .finally(() => {
+        setIsResendingCode(false)
+      })
   }
 
   return (
@@ -172,18 +164,18 @@ export function ForgotPasswordPage() {
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={handleResendCode}
               >
                 Resend code
-                {requestMutation.isPending && <Spinner />}
+                {isResendingCode && <Spinner />}
               </Button>
 
               <Button
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={() => {
                   setFlowData(null)
                   setError(undefined)

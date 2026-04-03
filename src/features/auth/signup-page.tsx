@@ -13,7 +13,6 @@ import {
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -29,49 +28,22 @@ export function SignupPage() {
   const [error, setError] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
   const [flowData, setFlowData] = useState<SignUpFlowData | null>(null)
-  const signUpOtpRequestMutation = useMutation({
-    mutationFn: requestSignUpOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-  })
-  const confirmSignUpMutation = useMutation({
-    mutationFn: confirmSignUpOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-    onSuccess: (result) => {
-      setSession(result.user)
-      queryClient.setQueryData(['auth-session'], { user: result.user })
-      window.location.assign('/')
-    },
-  })
-  const socialAuthMutation = useMutation({
-    mutationFn: (provider: 'github' | 'google') =>
-      getSocialAuthUrlAction(provider),
-    onSuccess: (result) => {
-      window.location.assign(result.url)
-    },
-  })
-
-  const isBusy =
-    signUpOtpRequestMutation.isPending ||
-    confirmSignUpMutation.isPending ||
-    socialAuthMutation.isPending
+  const [isResendingCode, setIsResendingCode] = useState(false)
+  const [isSocialAuthPending, setIsSocialAuthPending] = useState(false)
 
   async function handleSignUpSubmit(data: {
     email: string
     name: string
     password: string
   }) {
-    await signUpOtpRequestMutation
-      .mutateAsync({
-        email: data.email,
-        name: data.name,
-        password: data.password,
-      })
+    setError(undefined)
+    setNotice(undefined)
+
+    await requestSignUpOTPAction({
+      email: data.email,
+      name: data.name,
+      password: data.password,
+    })
       .then((result) => {
         setFlowData({
           email: data.email,
@@ -95,13 +67,20 @@ export function SignupPage() {
       return
     }
 
-    await confirmSignUpMutation
-      .mutateAsync({
-        email: flowData.email,
-        name: flowData.name,
-        otp: data.otp,
-        password: flowData.password,
-        tokens: flowData.tokens,
+    setError(undefined)
+    setNotice(undefined)
+
+    await confirmSignUpOTPAction({
+      email: flowData.email,
+      name: flowData.name,
+      otp: data.otp,
+      password: flowData.password,
+      tokens: flowData.tokens,
+    })
+      .then((result) => {
+        setSession(result.user)
+        queryClient.setQueryData(['auth-session'], { user: result.user })
+        window.location.assign('/')
       })
       .catch((nextError) => {
         setError(
@@ -117,29 +96,32 @@ export function SignupPage() {
       return
     }
 
-    signUpOtpRequestMutation.mutate(
-      {
-        email: flowData.email,
-        name: flowData.name,
-        password: flowData.password,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not resend verification code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            ...flowData,
-            tokens: [...flowData.tokens, result.token].slice(-5),
-          })
-          setNotice('A fresh code is on the way.')
-        },
-      }
-    )
+    setError(undefined)
+    setNotice(undefined)
+    setIsResendingCode(true)
+
+    requestSignUpOTPAction({
+      email: flowData.email,
+      name: flowData.name,
+      password: flowData.password,
+    })
+      .then((result) => {
+        setFlowData({
+          ...flowData,
+          tokens: [...flowData.tokens, result.token].slice(-5),
+        })
+        setNotice('A fresh code is on the way.')
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not resend verification code.'
+        )
+      })
+      .finally(() => {
+        setIsResendingCode(false)
+      })
   }
 
   return (
@@ -191,18 +173,18 @@ export function SignupPage() {
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={handleResendCode}
               >
                 Resend code
-                {signUpOtpRequestMutation.isPending && <Spinner />}
+                {isResendingCode && <Spinner />}
               </Button>
 
               <Button
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={() => {
                   setFlowData(null)
                   setError(undefined)
@@ -238,17 +220,25 @@ export function SignupPage() {
                   type="button"
                   aria-label="Continue with GitHub"
                   className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-                  disabled={isBusy}
-                  onClick={() => {
-                    socialAuthMutation.mutate('github', {
-                      onError: (nextError) => {
+                  disabled={isSocialAuthPending}
+                  onClick={async () => {
+                    setError(undefined)
+                    setIsSocialAuthPending(true)
+
+                    await getSocialAuthUrlAction('github')
+                      .then((result) => {
+                        window.location.assign(result.url)
+                      })
+                      .catch((nextError) => {
                         setError(
                           nextError instanceof Error
                             ? nextError.message
                             : 'Could not start GitHub sign up.'
                         )
-                      },
-                    })
+                      })
+                      .finally(() => {
+                        setIsSocialAuthPending(false)
+                      })
                   }}
                 >
                   <HugeiconsIcon icon={GithubIcon} size={20} />
@@ -258,17 +248,25 @@ export function SignupPage() {
                   type="button"
                   aria-label="Continue with Google"
                   className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-                  disabled={isBusy}
-                  onClick={() => {
-                    socialAuthMutation.mutate('google', {
-                      onError: (nextError) => {
+                  disabled={isSocialAuthPending}
+                  onClick={async () => {
+                    setError(undefined)
+                    setIsSocialAuthPending(true)
+
+                    await getSocialAuthUrlAction('google')
+                      .then((result) => {
+                        window.location.assign(result.url)
+                      })
+                      .catch((nextError) => {
                         setError(
                           nextError instanceof Error
                             ? nextError.message
                             : 'Could not start Google sign up.'
                         )
-                      },
-                    })
+                      })
+                      .finally(() => {
+                        setIsSocialAuthPending(false)
+                      })
                   }}
                 >
                   <HugeiconsIcon icon={GoogleIcon} size={20} />

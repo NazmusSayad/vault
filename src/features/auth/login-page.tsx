@@ -7,7 +7,6 @@ import { signInAction } from '@/server/auth/sign-in'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
@@ -16,25 +15,7 @@ export function LoginPage() {
   const searchParams = useSearchParams()
   const setSession = useAuthStore((state) => state.setSession)
   const [error, setError] = useState(searchParams.get('error') ?? undefined)
-  const signInMutation = useMutation({
-    mutationFn: signInAction,
-    onMutate: () => {
-      setError(undefined)
-    },
-    onSuccess: (result) => {
-      setSession(result.user)
-      queryClient.setQueryData(['auth-session'], { user: result.user })
-      window.location.assign('/')
-    },
-  })
-  const socialAuthMutation = useMutation({
-    mutationFn: (provider: 'github' | 'google') =>
-      getSocialAuthUrlAction(provider),
-    onSuccess: (result) => {
-      window.location.assign(result.url)
-    },
-  })
-  const isBusy = signInMutation.isPending || socialAuthMutation.isPending
+  const [isSocialAuthPending, setIsSocialAuthPending] = useState(false)
 
   return (
     <main className="bg-background text-foreground min-h-screen px-6 py-10">
@@ -60,13 +41,23 @@ export function LoginPage() {
                 password: '',
               }}
               onSubmit={async (data) => {
-                await signInMutation.mutateAsync(data).catch((nextError) => {
-                  setError(
-                    nextError instanceof Error
-                      ? nextError.message
-                      : 'Could not sign you in.'
-                  )
-                })
+                setError(undefined)
+
+                await signInAction(data)
+                  .then((result) => {
+                    setSession(result.user)
+                    queryClient.setQueryData(['auth-session'], {
+                      user: result.user,
+                    })
+                    window.location.assign('/')
+                  })
+                  .catch((nextError) => {
+                    setError(
+                      nextError instanceof Error
+                        ? nextError.message
+                        : 'Could not sign you in.'
+                    )
+                  })
               }}
             />
           </div>
@@ -91,17 +82,25 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with GitHub"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={isBusy}
-              onClick={() => {
-                socialAuthMutation.mutate('github', {
-                  onError: (nextError) => {
+              disabled={isSocialAuthPending}
+              onClick={async () => {
+                setError(undefined)
+                setIsSocialAuthPending(true)
+
+                await getSocialAuthUrlAction('github')
+                  .then((result) => {
+                    window.location.assign(result.url)
+                  })
+                  .catch((nextError) => {
                     setError(
                       nextError instanceof Error
                         ? nextError.message
                         : 'Could not start GitHub sign in.'
                     )
-                  },
-                })
+                  })
+                  .finally(() => {
+                    setIsSocialAuthPending(false)
+                  })
               }}
             >
               <HugeiconsIcon icon={GithubIcon} size={20} />
@@ -111,17 +110,25 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with Google"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={isBusy}
-              onClick={() => {
-                socialAuthMutation.mutate('google', {
-                  onError: (nextError) => {
+              disabled={isSocialAuthPending}
+              onClick={async () => {
+                setError(undefined)
+                setIsSocialAuthPending(true)
+
+                await getSocialAuthUrlAction('google')
+                  .then((result) => {
+                    window.location.assign(result.url)
+                  })
+                  .catch((nextError) => {
                     setError(
                       nextError instanceof Error
                         ? nextError.message
                         : 'Could not start Google sign in.'
                     )
-                  },
-                })
+                  })
+                  .finally(() => {
+                    setIsSocialAuthPending(false)
+                  })
               }}
             >
               <HugeiconsIcon icon={GoogleIcon} size={20} />
