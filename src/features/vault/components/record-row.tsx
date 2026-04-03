@@ -25,7 +25,6 @@ type RecordRowProps = {
 export function RecordRow({ record }: RecordRowProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const tags: string[] = []
 
   return (
     <>
@@ -55,18 +54,18 @@ export function RecordRow({ record }: RecordRowProps) {
 
         <TableCell>
           <div className="flex flex-wrap gap-1.5">
-            {tags.length === 0 ? (
+            {record.tags.length === 0 ? (
               <span className="text-muted-foreground text-sm">No tags</span>
             ) : (
-              tags.slice(0, 3).map((tag) => (
+              record.tags.slice(0, 3).map((tag) => (
                 <Badge key={tag} variant="outline" className="rounded-full">
                   {tag}
                 </Badge>
               ))
             )}
-            {tags.length > 3 ? (
+            {record.tags.length > 3 ? (
               <Badge variant="outline" className="rounded-full">
-                +{tags.length - 3}
+                +{record.tags.length - 3}
               </Badge>
             ) : null}
           </div>
