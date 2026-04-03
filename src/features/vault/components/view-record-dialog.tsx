@@ -42,14 +42,14 @@ function ViewRecordDialogContent({ record }: RecordDialogProps) {
       record.metadata,
       secret,
     ],
-    queryFn: async () => {
+
+    queryFn: () => {
       return decryptRecordClient({
         key: secret,
         data: record.data,
         metadata: record.metadata,
       })
     },
-    enabled: record.data === 'string' || typeof record.metadata === 'string',
   })
 
   const dataFields = Object.entries(decryptQuery.data?.data ?? {})

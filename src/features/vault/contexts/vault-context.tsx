@@ -25,8 +25,6 @@ export const [VaultContextProvider, useVaultContext] = createContext(
           auth: vaultSecret,
         })
       },
-
-      enabled: !!vaultSecret,
     })
 
     return {
