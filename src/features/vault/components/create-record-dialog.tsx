@@ -39,6 +39,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
+import { InputType } from 'node:zlib'
 import { useRef } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -49,8 +50,6 @@ type RecordCreateDialogProps = {
   onOpenChange: (open: boolean) => void
   vaultId: string
 }
-
-type InputType = 'text' | 'textarea' | 'number' | 'boolean'
 
 const recordTypeIds = RECORD_TYPES.map((recordType) => recordType.id)
 
