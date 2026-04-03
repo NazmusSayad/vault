@@ -25,7 +25,7 @@ import {
   NoteIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { RecordCreateDialog } from './components/record-create-dialog'
+import { CreateRecordDialog } from './components/create-record-dialog'
 import { RecordRow } from './components/record-row'
 import { resolveVaultIcon } from './constants/vault-icons'
 import { useVaultContext } from './contexts/vault-context'
@@ -90,7 +90,7 @@ export function VaultAuthedPage() {
                 </p>
               </div>
               <div className="mt-6 flex justify-center">
-                <RecordCreateDialog
+                <CreateRecordDialog
                   vaultId={vault.id}
                   trigger={
                     <Button>

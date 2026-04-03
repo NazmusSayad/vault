@@ -28,7 +28,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { resolveVaultIcon } from '../constants/vault-icons'
-import { VaultCreateDialog } from './vault-create-dialog'
+import { CreateVaultDialog } from './create-vault-dialog'
 
 export function VaultSidebarDesktop({
   mobileMode,
@@ -221,7 +221,7 @@ export function VaultSidebarDesktop({
         </div>
       )}
 
-      <VaultCreateDialog
+      <CreateVaultDialog
         open={isCreateVaultDialogOpen}
         onOpenChange={setIsCreateVaultDialogOpen}
       />

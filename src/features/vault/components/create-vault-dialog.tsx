@@ -40,7 +40,7 @@ const vaultCreateFormSchema = z.object({
   name: z.string().trim().min(1, 'Enter a vault name.'),
 })
 
-export function VaultCreateDialog({
+export function CreateVaultDialog({
   open,
   onOpenChange,
 }: {
@@ -49,12 +49,12 @@ export function VaultCreateDialog({
 }) {
   return (
     <BetterDialog open={open} onOpenChange={onOpenChange} width="32rem">
-      <VaultCreateDialogContent onOpenChange={onOpenChange} />
+      <CreateVaultDialogContent onOpenChange={onOpenChange} />
     </BetterDialog>
   )
 }
 
-function VaultCreateDialogContent({
+function CreateVaultDialogContent({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void

@@ -19,19 +19,19 @@ type RecordDialogProps = {
   record: PublicRecordType
 }
 
-export function RecordDialog({ ...props }: RecordDialogProps) {
+export function ViewRecordDialog({ ...props }: RecordDialogProps) {
   return (
     <BetterDialog
       width="56rem"
       open={props.open}
       onOpenChange={props.onOpenChange}
     >
-      <RecordDialogContent {...props} />
+      <ViewRecordDialogContent {...props} />
     </BetterDialog>
   )
 }
 
-function RecordDialogContent({ record }: RecordDialogProps) {
+function ViewRecordDialogContent({ record }: RecordDialogProps) {
   const { secret } = useVaultContext()
 
   const decryptQuery = useQuery({

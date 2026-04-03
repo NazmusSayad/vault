@@ -4,7 +4,7 @@ import type { PublicRecordType } from '@/lib/schema'
 import { NoteIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { RecordDialog } from './record-dialog'
+import { ViewRecordDialog } from './view-record-dialog'
 
 type RecordRowProps = {
   record: PublicRecordType
@@ -33,7 +33,7 @@ export function RecordRow({ record }: RecordRowProps) {
         </TableCell>
       </TableRow>
 
-      <RecordDialog
+      <ViewRecordDialog
         record={record}
         open={searchParams.get('record') === record.id}
         onOpenChange={(open) => {

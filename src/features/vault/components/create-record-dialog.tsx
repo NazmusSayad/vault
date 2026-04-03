@@ -37,7 +37,7 @@ function createDataMap(fields: RecordField[]) {
   return Object.fromEntries(fields)
 }
 
-export function RecordCreateDialog({
+export function CreateRecordDialog({
   trigger,
   vaultId,
 }: RecordCreateDialogProps) {
@@ -50,12 +50,12 @@ export function RecordCreateDialog({
       trigger={trigger}
       width="56rem"
     >
-      <RecordCreateDialogContent vaultId={vaultId} onOpenChange={setOpen} />
+      <CreateRecordDialogContent vaultId={vaultId} onOpenChange={setOpen} />
     </BetterDialog>
   )
 }
 
-function RecordCreateDialogContent({
+function CreateRecordDialogContent({
   onOpenChange,
   vaultId,
 }: RecordCreateDialogContentProps) {
