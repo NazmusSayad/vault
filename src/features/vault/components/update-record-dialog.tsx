@@ -1,9 +1,6 @@
 'use client'
 
-import {
-  CreateRecordFormValues,
-  encryptAndPrepareData,
-} from '@/features/vault/helpers/build-zod-schema'
+import { encryptAndPrepareData } from '@/features/vault/helpers/build-zod-schema'
 import { PublicRecordType } from '@/lib/public-schema'
 import { queryClient } from '@/lib/query-client'
 import { updateVaultRecordAction } from '@/server/vault/vault-record'
@@ -14,13 +11,11 @@ import { ConfigureRecordDialog } from './configure-record-dialog'
 type RecordUpdateDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  data: CreateRecordFormValues
   record: PublicRecordType
 }
 
 export function UpdateRecordDialog({
   open,
-  data,
   record,
   onOpenChange,
 }: RecordUpdateDialogProps) {
@@ -30,7 +25,7 @@ export function UpdateRecordDialog({
     <ConfigureRecordDialog
       open={open}
       onOpenChange={onOpenChange}
-      defaultValues={data}
+      defaultValues={{}}
       onSubmit={async (values) => {
         try {
           const encrypted = await encryptAndPrepareData(secret, values)
