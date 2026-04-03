@@ -1,15 +1,3 @@
-export type RecordTypeDetails = {
-  id: string
-  name: string
-  type: FieldInputType
-  fields: {
-    id: string
-    name: string
-    type: FieldInputType
-    required?: boolean
-  }[]
-}
-
 export const FIELD_INPUT_TYPES = [
   'text',
   'textarea',
@@ -19,11 +7,23 @@ export const FIELD_INPUT_TYPES = [
 
 export type FieldInputType = (typeof FIELD_INPUT_TYPES)[number]
 
+export type RecordTypeDetailsField = {
+  id: string
+  name: string
+  type: FieldInputType
+  required?: boolean
+}
+
+export type RecordTypeDetails = {
+  id: string
+  name: string
+  fields: RecordTypeDetailsField[]
+}
+
 export const RECORD_TYPES: RecordTypeDetails[] = [
   {
     id: 'password',
     name: 'Password',
-    type: 'text',
     fields: [
       {
         id: 'username',
@@ -47,7 +47,6 @@ export const RECORD_TYPES: RecordTypeDetails[] = [
   {
     id: 'NOTE',
     name: 'Note',
-    type: 'textarea',
     fields: [
       {
         id: 'content',
@@ -61,7 +60,6 @@ export const RECORD_TYPES: RecordTypeDetails[] = [
   {
     id: 'apiKey',
     name: 'API Key',
-    type: 'text',
     fields: [
       {
         id: 'key',
