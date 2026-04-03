@@ -1,13 +1,9 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
 import { Spinner } from '@/components/ui/spinner'
+import { ConfirmForgetPasswordForm } from '@/features/auth/components/confirm-forget-password-form'
+import { RequestForgetPasswordForm } from '@/features/auth/components/request-forget-password-form'
 import { queryClient } from '@/lib/query-client'
 import {
   confirmResetPasswordOTPAction,
@@ -16,7 +12,7 @@ import {
 import { useAuthStore } from '@/store/use-auth-store'
 import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 type ForgotPasswordFlowData = {
   email: string
@@ -28,7 +24,6 @@ export function ForgotPasswordPage() {
   const [flowData, setFlowData] = useState<ForgotPasswordFlowData | null>(null)
   const [error, setError] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
-  const [otp, setOtp] = useState('')
   const requestMutation = useMutation({
     mutationFn: requestResetPasswordOTPAction,
     onMutate: () => {
@@ -50,69 +45,50 @@ export function ForgotPasswordPage() {
   })
   const isBusy = requestMutation.isPending || confirmMutation.isPending
 
-  function handleRequestSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const email = String(formData.get('email') ?? '').trim()
-
-    requestMutation.mutate(
-      {
-        email,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not send recovery code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            email,
-            tokens: [result.token],
-          })
-          setOtp('')
-          setNotice('Recovery code sent to your email.')
-        },
-      }
-    )
+  async function handleRequestSubmit(data: { email: string }) {
+    await requestMutation
+      .mutateAsync({
+        email: data.email,
+      })
+      .then((result) => {
+        setFlowData({
+          email: data.email,
+          tokens: [result.token],
+        })
+        setNotice('Recovery code sent to your email.')
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not send recovery code.'
+        )
+      })
   }
 
-  function handleConfirmSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
+  async function handleConfirmSubmit(data: {
+    confirmPassword: string
+    otp: string
+    password: string
+  }) {
     if (!flowData) {
       return
     }
 
-    const formData = new FormData(event.currentTarget)
-    const password = String(formData.get('password') ?? '')
-    const confirmPassword = String(formData.get('confirmPassword') ?? '')
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
-    }
-
-    confirmMutation.mutate(
-      {
+    await confirmMutation
+      .mutateAsync({
         email: flowData.email,
-        otp,
-        password,
+        otp: data.otp,
+        password: data.password,
         tokens: flowData.tokens,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not reset your password.'
-          )
-        },
-      }
-    )
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not reset your password.'
+        )
+      })
   }
 
   function handleResendCode() {
@@ -137,7 +113,6 @@ export function ForgotPasswordPage() {
             ...flowData,
             tokens: [...flowData.tokens, result.token].slice(-5),
           })
-          setOtp('')
           setNotice('A fresh code is on the way.')
         },
       }
@@ -175,7 +150,7 @@ export function ForgotPasswordPage() {
           )}
 
           {flowData ? (
-            <form onSubmit={handleConfirmSubmit} className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4">
               <div className="border-border bg-background rounded-2xl border p-4 text-sm">
                 <div className="font-medium">{flowData.email}</div>
                 <div className="text-muted-foreground mt-1">
@@ -183,49 +158,15 @@ export function ForgotPasswordPage() {
                 </div>
               </div>
 
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                disabled={isBusy}
-                containerClassName="w-full justify-center gap-2"
-              >
-                <InputOTPGroup className="gap-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="bg-background border-input h-12 w-12 rounded-lg border text-lg"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-
-              <Input
-                name="password"
-                type="password"
-                placeholder="New password"
-                minLength={6}
-                required
-                disabled={isBusy}
+              <ConfirmForgetPasswordForm
+                key={flowData.tokens.length}
+                defaultData={{
+                  confirmPassword: '',
+                  otp: '',
+                  password: '',
+                }}
+                onSubmit={handleConfirmSubmit}
               />
-              <Input
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm password"
-                minLength={6}
-                required
-                disabled={isBusy}
-              />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isBusy || otp.length !== 6}
-              >
-                Reset password
-                {confirmMutation.isPending && <Spinner />}
-              </Button>
 
               <Button
                 type="button"
@@ -245,29 +186,22 @@ export function ForgotPasswordPage() {
                 disabled={isBusy}
                 onClick={() => {
                   setFlowData(null)
-                  setOtp('')
                   setError(undefined)
                   setNotice(undefined)
                 }}
               >
                 Back
               </Button>
-            </form>
+            </div>
           ) : (
-            <form onSubmit={handleRequestSubmit} className="mt-6 space-y-4">
-              <Input
-                name="email"
-                type="email"
-                placeholder="name@company.com"
-                required
-                disabled={isBusy}
+            <div className="mt-6">
+              <RequestForgetPasswordForm
+                defaultData={{
+                  email: '',
+                }}
+                onSubmit={handleRequestSubmit}
               />
-
-              <Button type="submit" className="w-full" disabled={isBusy}>
-                Continue
-                {requestMutation.isPending && <Spinner />}
-              </Button>
-            </form>
+            </div>
           )}
 
           <div className="mt-6">

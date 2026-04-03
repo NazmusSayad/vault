@@ -1,8 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
+import { LoginForm } from '@/features/auth/components/login-form'
 import { queryClient } from '@/lib/query-client'
 import { getSocialAuthUrlAction } from '@/server/auth/oauth'
 import { signInAction } from '@/server/auth/sign-in'
@@ -12,7 +10,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 export function LoginPage() {
   const searchParams = useSearchParams()
@@ -38,28 +36,6 @@ export function LoginPage() {
   })
   const isBusy = signInMutation.isPending || socialAuthMutation.isPending
 
-  function handleSignInSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-
-    signInMutation.mutate(
-      {
-        email: String(formData.get('email') ?? '').trim(),
-        password: String(formData.get('password') ?? ''),
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not sign you in.'
-          )
-        },
-      }
-    )
-  }
-
   return (
     <main className="bg-background text-foreground min-h-screen px-6 py-10">
       <div className="mx-auto max-w-md">
@@ -77,27 +53,23 @@ export function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSignInSubmit} className="mt-6 space-y-4">
-            <Input
-              name="email"
-              type="email"
-              placeholder="name@company.com"
-              required
-              disabled={isBusy}
+          <div className="mt-6">
+            <LoginForm
+              defaultData={{
+                email: '',
+                password: '',
+              }}
+              onSubmit={async (data) => {
+                await signInMutation.mutateAsync(data).catch((nextError) => {
+                  setError(
+                    nextError instanceof Error
+                      ? nextError.message
+                      : 'Could not sign you in.'
+                  )
+                })
+              }}
             />
-            <Input
-              name="password"
-              type="password"
-              placeholder="Password"
-              required
-              disabled={isBusy}
-            />
-
-            <Button type="submit" className="w-full" disabled={isBusy}>
-              Sign in
-              {signInMutation.isPending && <Spinner />}
-            </Button>
-          </form>
+          </div>
 
           <div className="mt-4">
             <Link

@@ -1,13 +1,9 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
 import { Spinner } from '@/components/ui/spinner'
+import { ConfirmRegisterForm } from '@/features/auth/components/confirm-register-form'
+import { RequestRegisterForm } from '@/features/auth/components/request-register-form'
 import { queryClient } from '@/lib/query-client'
 import { getSocialAuthUrlAction } from '@/server/auth/oauth'
 import {
@@ -19,7 +15,7 @@ import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 type SignUpFlowData = {
   email: string
@@ -33,7 +29,6 @@ export function SignupPage() {
   const [error, setError] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
   const [flowData, setFlowData] = useState<SignUpFlowData | null>(null)
-  const [otp, setOtp] = useState('')
   const signUpOtpRequestMutation = useMutation({
     mutationFn: requestSignUpOTPAction,
     onMutate: () => {
@@ -66,67 +61,55 @@ export function SignupPage() {
     confirmSignUpMutation.isPending ||
     socialAuthMutation.isPending
 
-  function handleSignUpSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const email = String(formData.get('email') ?? '').trim()
-    const name = String(formData.get('name') ?? '').trim()
-    const password = String(formData.get('password') ?? '')
-
-    signUpOtpRequestMutation.mutate(
-      {
-        email,
-        name,
-        password,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not send verification code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            email,
-            name,
-            password,
-            tokens: [result.token],
-          })
-          setOtp('')
-          setNotice('Verification code sent to your email.')
-        },
-      }
-    )
+  async function handleSignUpSubmit(data: {
+    email: string
+    name: string
+    password: string
+  }) {
+    await signUpOtpRequestMutation
+      .mutateAsync({
+        email: data.email,
+        name: data.name,
+        password: data.password,
+      })
+      .then((result) => {
+        setFlowData({
+          email: data.email,
+          name: data.name,
+          password: data.password,
+          tokens: [result.token],
+        })
+        setNotice('Verification code sent to your email.')
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not send verification code.'
+        )
+      })
   }
 
-  function handleConfirmSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
+  async function handleConfirmSubmit(data: { otp: string }) {
     if (!flowData) {
       return
     }
 
-    confirmSignUpMutation.mutate(
-      {
+    await confirmSignUpMutation
+      .mutateAsync({
         email: flowData.email,
         name: flowData.name,
-        otp,
+        otp: data.otp,
         password: flowData.password,
         tokens: flowData.tokens,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not verify your code.'
-          )
-        },
-      }
-    )
+      })
+      .catch((nextError) => {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : 'Could not verify your code.'
+        )
+      })
   }
 
   function handleResendCode() {
@@ -153,7 +136,6 @@ export function SignupPage() {
             ...flowData,
             tokens: [...flowData.tokens, result.token].slice(-5),
           })
-          setOtp('')
           setNotice('A fresh code is on the way.')
         },
       }
@@ -189,7 +171,7 @@ export function SignupPage() {
           )}
 
           {flowData ? (
-            <form onSubmit={handleConfirmSubmit} className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4">
               <div className="border-border bg-background rounded-2xl border p-4 text-sm">
                 <div className="font-medium">{flowData.email}</div>
                 <div className="text-muted-foreground mt-1">
@@ -197,32 +179,13 @@ export function SignupPage() {
                 </div>
               </div>
 
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                disabled={isBusy}
-                containerClassName="w-full justify-center gap-2"
-              >
-                <InputOTPGroup className="gap-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="bg-background border-input h-12 w-12 rounded-lg border text-lg"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isBusy || otp.length !== 6}
-              >
-                Create account
-                {confirmSignUpMutation.isPending && <Spinner />}
-              </Button>
+              <ConfirmRegisterForm
+                key={flowData.tokens.length}
+                defaultData={{
+                  otp: '',
+                }}
+                onSubmit={handleConfirmSubmit}
+              />
 
               <Button
                 type="button"
@@ -242,42 +205,24 @@ export function SignupPage() {
                 disabled={isBusy}
                 onClick={() => {
                   setFlowData(null)
-                  setOtp('')
                   setError(undefined)
                   setNotice(undefined)
                 }}
               >
                 Back
               </Button>
-            </form>
+            </div>
           ) : (
-            <form onSubmit={handleSignUpSubmit} className="mt-6 space-y-4">
-              <Input
-                name="name"
-                placeholder="Your name"
-                required
-                disabled={isBusy}
+            <div className="mt-6">
+              <RequestRegisterForm
+                defaultData={{
+                  email: '',
+                  name: '',
+                  password: '',
+                }}
+                onSubmit={handleSignUpSubmit}
               />
-              <Input
-                name="email"
-                type="email"
-                placeholder="name@company.com"
-                required
-                disabled={isBusy}
-              />
-              <Input
-                name="password"
-                type="password"
-                placeholder="Password"
-                required
-                disabled={isBusy}
-              />
-
-              <Button type="submit" className="w-full" disabled={isBusy}>
-                Continue
-                {signUpOtpRequestMutation.isPending && <Spinner />}
-              </Button>
-            </form>
+            </div>
           )}
 
           {!flowData && (
