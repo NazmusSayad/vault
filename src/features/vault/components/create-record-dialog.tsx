@@ -46,11 +46,12 @@ type RecordCreateDialogContentProps = {
 }
 
 export type CreateRecordFormValues = {
+  name: string
+  type: string
+  tags: string[]
+
   data: Record<string, string>
   metadata: Array<{ key: string; value: string }>
-  name: string
-  tags: string[]
-  type: string
 }
 
 export function CreateRecordDialog({
