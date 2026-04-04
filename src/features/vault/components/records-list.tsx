@@ -84,8 +84,6 @@ function parseTagsFromMetadata(metadata?: string) {
   return []
 }
 
-// MUST USE ./record-row.tsx for each record row
-
 export function RecordsList({ records }: { records: PublicRecordType[] }) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'lastUpdated', desc: true },
@@ -119,7 +117,6 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
       keys: ['record.name', 'record.type', 'tagsLabel'],
       threshold: 0.35,
       ignoreLocation: true,
-      minMatchCharLength: 2,
     })
       .search(search)
       .map((result) => result.item)
