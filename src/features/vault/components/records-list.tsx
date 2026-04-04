@@ -169,7 +169,7 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     : []
 
   return (
-    <section className="space-y-4 py-4">
+    <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Input
           value={globalFilter}

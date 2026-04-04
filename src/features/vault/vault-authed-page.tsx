@@ -81,7 +81,7 @@ export function VaultAuthedPage() {
       </header>
 
       <BetterScrollArea>
-        <Wrapper>
+        <Wrapper className="py-4">
           {records.length === 0 ? (
             <section className="border-border bg-card rounded-[2rem] border p-8 text-center shadow-sm sm:p-12">
               <div className="bg-muted mx-auto flex size-16 items-center justify-center rounded-3xl">
