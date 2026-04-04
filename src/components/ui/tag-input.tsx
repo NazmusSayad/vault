@@ -47,7 +47,7 @@ function TagInput({
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState('')
 
-  const addTags = (tags: string[]) => {
+  function addTags(tags: string[]) {
     const next = toUniqueTags(value, tags)
 
     if (next.length === 0) {
@@ -57,7 +57,7 @@ function TagInput({
     onChange([...value, ...next])
   }
 
-  const commitInputValue = () => {
+  function commitInputValue() {
     if (!inputValue.trim()) {
       return
     }
@@ -75,7 +75,11 @@ function TagInput({
       )}
     >
       {value.map((tag) => (
-        <Badge key={tag} variant="secondary" className="gap-1 rounded-sm pr-1 pl-2">
+        <Badge
+          key={tag}
+          variant="secondary"
+          className="gap-1 rounded-sm pr-1 pl-2"
+        >
           <span>{tag}</span>
 
           <button
@@ -107,7 +111,11 @@ function TagInput({
             commitInputValue()
           }
 
-          if (event.key === 'Backspace' && !inputValue.trim() && value.length > 0) {
+          if (
+            event.key === 'Backspace' &&
+            !inputValue.trim() &&
+            value.length > 0
+          ) {
             event.preventDefault()
             onChange(value.slice(0, -1))
           }
