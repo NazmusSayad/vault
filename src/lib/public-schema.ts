@@ -32,6 +32,8 @@ export const PublicRecord = z.object({
   updatedAt: z.date(),
 
   name: z.string(),
+  tags: z.array(z.string()).default([]),
+
   type: z
     .string()
     .nullable()

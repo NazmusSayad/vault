@@ -36,6 +36,8 @@ export const VAULT_ICONS: Record<string, IconSvgElement> = {
   pin: CirclePasswordIcon,
 }
 
-export function resolveVaultIcon(name: string): IconSvgElement {
-  return VAULT_ICONS[name] || FolderLockedIcon
+export function resolveVaultIcon(
+  name: string | undefined | null
+): IconSvgElement {
+  return VAULT_ICONS[name ?? ''] || FolderLockedIcon
 }

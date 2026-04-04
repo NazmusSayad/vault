@@ -88,7 +88,7 @@ export function Hero() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <HugeiconsIcon icon={GithubIcon} className="mr-2 size-4" />
+                    <HugeiconsIcon icon={GithubIcon} className="size-4" />
                     source
                   </a>
                 </Button>

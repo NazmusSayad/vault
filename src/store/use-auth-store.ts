@@ -1,6 +1,6 @@
 'use client'
 
-import { SessionUserType } from '@/lib/schema'
+import { SessionUserType } from '@/lib/public-schema'
 import { create } from 'zustand'
 import { combine } from 'zustand/middleware'
 

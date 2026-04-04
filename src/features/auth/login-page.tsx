@@ -1,64 +1,21 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spinner'
+import { LoginForm } from '@/features/auth/components/login-form'
 import { queryClient } from '@/lib/query-client'
 import { getSocialAuthUrlAction } from '@/server/auth/oauth'
 import { signInAction } from '@/server/auth/sign-in'
 import { useAuthStore } from '@/store/use-auth-store'
 import { GithubIcon, GoogleIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 export function LoginPage() {
   const searchParams = useSearchParams()
   const setSession = useAuthStore((state) => state.setSession)
   const [error, setError] = useState(searchParams.get('error') ?? undefined)
-  const signInMutation = useMutation({
-    mutationFn: signInAction,
-    onMutate: () => {
-      setError(undefined)
-    },
-    onSuccess: (result) => {
-      setSession(result.user)
-      queryClient.setQueryData(['auth-session'], { user: result.user })
-      window.location.assign('/')
-    },
-  })
-  const socialAuthMutation = useMutation({
-    mutationFn: (provider: 'github' | 'google') =>
-      getSocialAuthUrlAction(provider),
-    onSuccess: (result) => {
-      window.location.assign(result.url)
-    },
-  })
-  const isBusy = signInMutation.isPending || socialAuthMutation.isPending
-
-  function handleSignInSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-
-    signInMutation.mutate(
-      {
-        email: String(formData.get('email') ?? '').trim(),
-        password: String(formData.get('password') ?? ''),
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not sign you in.'
-          )
-        },
-      }
-    )
-  }
+  const [isSocialAuthPending, setIsSocialAuthPending] = useState(false)
 
   return (
     <main className="bg-background text-foreground min-h-screen px-6 py-10">
@@ -77,27 +34,33 @@ export function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSignInSubmit} className="mt-6 space-y-4">
-            <Input
-              name="email"
-              type="email"
-              placeholder="name@company.com"
-              required
-              disabled={isBusy}
-            />
-            <Input
-              name="password"
-              type="password"
-              placeholder="Password"
-              required
-              disabled={isBusy}
-            />
+          <div className="mt-6">
+            <LoginForm
+              defaultData={{
+                email: '',
+                password: '',
+              }}
+              onSubmit={async (data) => {
+                setError(undefined)
 
-            <Button type="submit" className="w-full" disabled={isBusy}>
-              Sign in
-              {signInMutation.isPending && <Spinner />}
-            </Button>
-          </form>
+                try {
+                  const result = await signInAction(data)
+
+                  setSession(result.user)
+                  queryClient.setQueryData(['auth-session'], {
+                    user: result.user,
+                  })
+                  window.location.assign('/')
+                } catch (nextError) {
+                  setError(
+                    nextError instanceof Error
+                      ? nextError.message
+                      : 'Could not sign you in.'
+                  )
+                }
+              }}
+            />
+          </div>
 
           <div className="mt-4">
             <Link
@@ -119,17 +82,23 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with GitHub"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={isBusy}
-              onClick={() => {
-                socialAuthMutation.mutate('github', {
-                  onError: (nextError) => {
-                    setError(
-                      nextError instanceof Error
-                        ? nextError.message
-                        : 'Could not start GitHub sign in.'
-                    )
-                  },
-                })
+              disabled={isSocialAuthPending}
+              onClick={async () => {
+                setError(undefined)
+                setIsSocialAuthPending(true)
+
+                try {
+                  const result = await getSocialAuthUrlAction('github')
+                  window.location.assign(result.url)
+                } catch (nextError) {
+                  setError(
+                    nextError instanceof Error
+                      ? nextError.message
+                      : 'Could not start GitHub sign in.'
+                  )
+                } finally {
+                  setIsSocialAuthPending(false)
+                }
               }}
             >
               <HugeiconsIcon icon={GithubIcon} size={20} />
@@ -139,17 +108,23 @@ export function LoginPage() {
               type="button"
               aria-label="Continue with Google"
               className="border-border bg-background hover:bg-muted flex size-12 items-center justify-center rounded-full border transition-colors"
-              disabled={isBusy}
-              onClick={() => {
-                socialAuthMutation.mutate('google', {
-                  onError: (nextError) => {
-                    setError(
-                      nextError instanceof Error
-                        ? nextError.message
-                        : 'Could not start Google sign in.'
-                    )
-                  },
-                })
+              disabled={isSocialAuthPending}
+              onClick={async () => {
+                setError(undefined)
+                setIsSocialAuthPending(true)
+
+                try {
+                  const result = await getSocialAuthUrlAction('google')
+                  window.location.assign(result.url)
+                } catch (nextError) {
+                  setError(
+                    nextError instanceof Error
+                      ? nextError.message
+                      : 'Could not start Google sign in.'
+                  )
+                } finally {
+                  setIsSocialAuthPending(false)
+                }
               }}
             >
               <HugeiconsIcon icon={GoogleIcon} size={20} />

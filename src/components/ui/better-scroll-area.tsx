@@ -50,3 +50,11 @@ export function BetterScrollAreaFaded({
     </BetterScrollAreaProvider>
   )
 }
+
+export function BetterScrollArea({ children }: PropsWithChildren) {
+  return (
+    <BetterScrollAreaProvider>
+      <BetterScrollAreaContent>{children}</BetterScrollAreaContent>
+    </BetterScrollAreaProvider>
+  )
+}

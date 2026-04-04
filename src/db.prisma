@@ -46,6 +46,7 @@ model VaultRecord {
 
   name String
   type String?
+  tags String[] @default([])
 
   data     String? // Record<string, string>
   metadata String? // [key: string, value: string][]

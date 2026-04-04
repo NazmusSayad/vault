@@ -32,7 +32,7 @@ import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
-import { VAULT_ICONS } from './constants/vault-icons'
+import { VAULT_ICONS } from '../constants/vault-icons'
 
 const vaultCreateFormSchema = z.object({
   auth: z.string().trim().min(1, 'Enter a vault PIN.'),
@@ -40,7 +40,7 @@ const vaultCreateFormSchema = z.object({
   name: z.string().trim().min(1, 'Enter a vault name.'),
 })
 
-export function VaultCreateDialog({
+export function CreateVaultDialog({
   open,
   onOpenChange,
 }: {
@@ -49,12 +49,12 @@ export function VaultCreateDialog({
 }) {
   return (
     <BetterDialog open={open} onOpenChange={onOpenChange} width="32rem">
-      <VaultCreateDialogContent onOpenChange={onOpenChange} />
+      <CreateVaultDialogContent onOpenChange={onOpenChange} />
     </BetterDialog>
   )
 }
 
-function VaultCreateDialogContent({
+function CreateVaultDialogContent({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void
@@ -65,7 +65,7 @@ function VaultCreateDialogContent({
   const form = useForm({
     defaultValues: {
       auth: '',
-      icon: 'password',
+      icon: '',
       name: '',
     },
     resolver: zodResolver(vaultCreateFormSchema),
@@ -118,11 +118,11 @@ function VaultCreateDialogContent({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Vault name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Engineering Secrets"
+                    placeholder="eg: Engineering Secrets"
                     disabled={createVaultMutation.isPending}
                   />
                 </FormControl>
@@ -136,12 +136,12 @@ function VaultCreateDialogContent({
             name="auth"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Vault PIN</FormLabel>
+                <FormLabel>Secret</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
-                    placeholder="Enter a vault PIN"
+                    placeholder="Vault PIN or password"
                     disabled={createVaultMutation.isPending}
                   />
                 </FormControl>
@@ -165,6 +165,7 @@ function VaultCreateDialogContent({
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select an icon" />
                     </SelectTrigger>
+
                     <SelectContent>
                       {Object.entries(VAULT_ICONS).map(([key, icon]) => (
                         <SelectItem key={key} value={key}>

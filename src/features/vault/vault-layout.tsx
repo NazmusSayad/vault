@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils'
 import { PropsWithChildren } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
+import { VaultSidebarDesktop } from './components/vault-sidebar-desktop'
+import { VaultSidebarMobile } from './components/vault-sidebar-mobile'
 import styles from './vault-layout.module.css'
-import { VaultSidebarDesktop } from './vault-sidebar-desktop'
-import { VaultSidebarMobile } from './vault-sidebar-mobile'
 
 export function VaultLayout({ children }: PropsWithChildren) {
   const isMobile = useMediaQuery('(max-width: 45rem)')

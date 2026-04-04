@@ -11,7 +11,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useState } from 'react'
-import { VaultCreateDialog } from './vault-create-dialog'
+import { CreateVaultDialog } from './components/create-vault-dialog'
 
 export function VaultHomePage() {
   const vaultsQuery = useQuery({
@@ -127,7 +127,7 @@ export function VaultHomePage() {
         </div>
       </div>
 
-      <VaultCreateDialog
+      <CreateVaultDialog
         open={isCreateVaultDialogOpen}
         onOpenChange={setIsCreateVaultDialogOpen}
       />

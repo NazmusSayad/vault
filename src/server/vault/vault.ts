@@ -3,7 +3,7 @@
 import { createHmac } from 'node:crypto'
 
 import { serverEnv } from '@/env.server'
-import { PublicVault } from '@/lib/schema'
+import { PublicVault } from '@/lib/public-schema'
 import { requireCurrentSessionUser } from '@/server/auth/session'
 import { prisma } from '@/server/db'
 import { z } from 'zod'

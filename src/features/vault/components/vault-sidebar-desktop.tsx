@@ -27,8 +27,8 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { resolveVaultIcon } from './constants/vault-icons'
-import { VaultCreateDialog } from './vault-create-dialog'
+import { resolveVaultIcon } from '../constants/vault-icons'
+import { CreateVaultDialog } from './create-vault-dialog'
 
 export function VaultSidebarDesktop({
   mobileMode,
@@ -80,7 +80,7 @@ export function VaultSidebarDesktop({
         mobileMode && 'w-full'
       )}
     >
-      <div className="flex items-center gap-4 border-b p-3 py-2.5">
+      <div className="border-border/80 flex items-center gap-4 border-b p-3 py-2.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -209,7 +209,7 @@ export function VaultSidebarDesktop({
       )}
 
       {!noVaultAvailable && (
-        <div className="flex flex-col gap-2 border-t p-3">
+        <div className="border-border/80 flex flex-col gap-2 border-t p-3">
           <Button
             variant="outline"
             className="w-full"
@@ -221,7 +221,7 @@ export function VaultSidebarDesktop({
         </div>
       )}
 
-      <VaultCreateDialog
+      <CreateVaultDialog
         open={isCreateVaultDialogOpen}
         onOpenChange={setIsCreateVaultDialogOpen}
       />

@@ -1,22 +1,17 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp'
 import { Spinner } from '@/components/ui/spinner'
+import { ConfirmForgetPasswordForm } from '@/features/auth/components/confirm-forget-password-form'
+import { RequestForgetPasswordForm } from '@/features/auth/components/request-forget-password-form'
 import { queryClient } from '@/lib/query-client'
 import {
   confirmResetPasswordOTPAction,
   requestResetPasswordOTPAction,
 } from '@/server/auth/password-reset'
 import { useAuthStore } from '@/store/use-auth-store'
-import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
 
 type ForgotPasswordFlowData = {
   email: string
@@ -28,120 +23,91 @@ export function ForgotPasswordPage() {
   const [flowData, setFlowData] = useState<ForgotPasswordFlowData | null>(null)
   const [error, setError] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
-  const [otp, setOtp] = useState('')
-  const requestMutation = useMutation({
-    mutationFn: requestResetPasswordOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-  })
-  const confirmMutation = useMutation({
-    mutationFn: confirmResetPasswordOTPAction,
-    onMutate: () => {
-      setError(undefined)
-      setNotice(undefined)
-    },
-    onSuccess: (result) => {
+  const [isResendingCode, setIsResendingCode] = useState(false)
+
+  async function handleRequestSubmit(data: { email: string }) {
+    setError(undefined)
+    setNotice(undefined)
+
+    try {
+      const result = await requestResetPasswordOTPAction({
+        email: data.email,
+      })
+
+      setFlowData({
+        email: data.email,
+        tokens: [result.token],
+      })
+      setNotice('Recovery code sent to your email.')
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : 'Could not send recovery code.'
+      )
+    }
+  }
+
+  async function handleConfirmSubmit(data: {
+    confirmPassword: string
+    otp: string
+    password: string
+  }) {
+    if (!flowData) {
+      return
+    }
+
+    setError(undefined)
+    setNotice(undefined)
+
+    try {
+      const result = await confirmResetPasswordOTPAction({
+        email: flowData.email,
+        otp: data.otp,
+        password: data.password,
+        tokens: flowData.tokens,
+      })
+
       setSession(result.user)
       queryClient.setQueryData(['auth-session'], { user: result.user })
       window.location.assign('/')
-    },
-  })
-  const isBusy = requestMutation.isPending || confirmMutation.isPending
-
-  function handleRequestSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const email = String(formData.get('email') ?? '').trim()
-
-    requestMutation.mutate(
-      {
-        email,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not send recovery code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            email,
-            tokens: [result.token],
-          })
-          setOtp('')
-          setNotice('Recovery code sent to your email.')
-        },
-      }
-    )
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : 'Could not reset your password.'
+      )
+    }
   }
 
-  function handleConfirmSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
+  async function handleResendCode() {
     if (!flowData) {
       return
     }
 
-    const formData = new FormData(event.currentTarget)
-    const password = String(formData.get('password') ?? '')
-    const confirmPassword = String(formData.get('confirmPassword') ?? '')
+    setError(undefined)
+    setNotice(undefined)
+    setIsResendingCode(true)
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
-    }
-
-    confirmMutation.mutate(
-      {
+    try {
+      const result = await requestResetPasswordOTPAction({
         email: flowData.email,
-        otp,
-        password,
-        tokens: flowData.tokens,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not reset your password.'
-          )
-        },
-      }
-    )
-  }
+      })
 
-  function handleResendCode() {
-    if (!flowData) {
-      return
+      setFlowData({
+        ...flowData,
+        tokens: [...flowData.tokens, result.token].slice(-5),
+      })
+      setNotice('A fresh code is on the way.')
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : 'Could not resend the code.'
+      )
+    } finally {
+      setIsResendingCode(false)
     }
-
-    requestMutation.mutate(
-      {
-        email: flowData.email,
-      },
-      {
-        onError: (nextError) => {
-          setError(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Could not resend the code.'
-          )
-        },
-        onSuccess: (result) => {
-          setFlowData({
-            ...flowData,
-            tokens: [...flowData.tokens, result.token].slice(-5),
-          })
-          setOtp('')
-          setNotice('A fresh code is on the way.')
-        },
-      }
-    )
   }
 
   return (
@@ -175,7 +141,7 @@ export function ForgotPasswordPage() {
           )}
 
           {flowData ? (
-            <form onSubmit={handleConfirmSubmit} className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4">
               <div className="border-border bg-background rounded-2xl border p-4 text-sm">
                 <div className="font-medium">{flowData.email}</div>
                 <div className="text-muted-foreground mt-1">
@@ -183,91 +149,50 @@ export function ForgotPasswordPage() {
                 </div>
               </div>
 
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={setOtp}
-                disabled={isBusy}
-                containerClassName="w-full justify-center gap-2"
-              >
-                <InputOTPGroup className="gap-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className="bg-background border-input h-12 w-12 rounded-lg border text-lg"
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-
-              <Input
-                name="password"
-                type="password"
-                placeholder="New password"
-                minLength={6}
-                required
-                disabled={isBusy}
+              <ConfirmForgetPasswordForm
+                key={flowData.tokens.length}
+                defaultData={{
+                  confirmPassword: '',
+                  otp: '',
+                  password: '',
+                }}
+                onSubmit={handleConfirmSubmit}
               />
-              <Input
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm password"
-                minLength={6}
-                required
-                disabled={isBusy}
-              />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isBusy || otp.length !== 6}
-              >
-                Reset password
-                {confirmMutation.isPending && <Spinner />}
-              </Button>
 
               <Button
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={handleResendCode}
               >
                 Resend code
-                {requestMutation.isPending && <Spinner />}
+                {isResendingCode && <Spinner />}
               </Button>
 
               <Button
                 type="button"
                 variant="ghost"
                 className="text-muted-foreground hover:text-foreground w-full"
-                disabled={isBusy}
+                disabled={isResendingCode}
                 onClick={() => {
                   setFlowData(null)
-                  setOtp('')
                   setError(undefined)
                   setNotice(undefined)
                 }}
               >
                 Back
               </Button>
-            </form>
+            </div>
           ) : (
-            <form onSubmit={handleRequestSubmit} className="mt-6 space-y-4">
-              <Input
-                name="email"
-                type="email"
-                placeholder="name@company.com"
-                required
-                disabled={isBusy}
+            <div className="mt-6">
+              <RequestForgetPasswordForm
+                defaultData={{
+                  email: '',
+                }}
+                onSubmit={handleRequestSubmit}
               />
-
-              <Button type="submit" className="w-full" disabled={isBusy}>
-                Continue
-                {requestMutation.isPending && <Spinner />}
-              </Button>
-            </form>
+            </div>
           )}
 
           <div className="mt-6">
