@@ -48,47 +48,6 @@ import { useMemo, useState } from 'react'
 import { resolveVaultIcon } from '../constants/vault-icons'
 import { RecordRow } from './record-row'
 
-function parseTagsFromMetadata(metadata?: string) {
-  if (!metadata) {
-    return [] as string[]
-  }
-
-  try {
-    const parsed = JSON.parse(metadata)
-
-    if (Array.isArray(parsed)) {
-      const tagsField = parsed.find(
-        (item) =>
-          Array.isArray(item) &&
-          item.length >= 2 &&
-          String(item[0]).toLowerCase() === 'tags'
-      )
-
-      if (Array.isArray(tagsField) && typeof tagsField[1] === 'string') {
-        return tagsField[1]
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-      }
-    }
-
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'tags' in parsed &&
-      Array.isArray(parsed.tags)
-    ) {
-      return parsed.tags
-        .map((tag: unknown) => String(tag).trim())
-        .filter(Boolean)
-    }
-  } catch {
-    return []
-  }
-
-  return []
-}
-
 export function RecordsList({ records }: { records: PublicRecordType[] }) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'lastUpdated', desc: true },
@@ -99,12 +58,10 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
   const data = useMemo(
     () =>
       records.map((record) => {
-        const tags = parseTagsFromMetadata(record.metadata)
-
         return {
           record,
-          tags,
-          tagsLabel: tags.join(', '),
+          tags: record.tags,
+          tagsLabel: record.tags.join(', '),
           updatedAtTs: new Date(record.updatedAt).getTime(),
         }
       }),
