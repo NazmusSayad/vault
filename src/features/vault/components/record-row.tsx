@@ -43,7 +43,9 @@ export function RecordRow({ record }: RecordRowProps) {
 
         <TableCell>
           {record.type?.trim() ? (
-            <Badge variant="outline">{record.type}</Badge>
+            <Badge variant="outline" className="uppercase">
+              {record.type}
+            </Badge>
           ) : (
             <span className="text-muted-foreground text-sm">N/A</span>
           )}

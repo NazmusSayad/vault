@@ -61,7 +61,7 @@ function ViewRecordDialogContent({ record }: RecordDialogProps) {
           {record.type?.trim() && (
             <Badge
               variant="secondary"
-              className="rounded-full px-2 py-0.5 text-xs font-medium capitalize"
+              className="rounded-full px-2 py-0.5 text-[0.625rem] font-medium uppercase"
             >
               {record.type}
             </Badge>
