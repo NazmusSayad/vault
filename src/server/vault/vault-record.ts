@@ -146,7 +146,7 @@ export async function createVaultRecordAction(
     data: {
       name: body.name,
       type: body.type,
-      tags: body.tags,
+      // tags: body.tags,
       vaultId: body.vaultId,
       ...(await encryptRecordServer(body)),
     },
@@ -185,7 +185,7 @@ export async function updateVaultRecordAction(
     data: {
       name: body.name,
       type: body.type,
-      tags: body.tags,
+      // tags: body.tags,
       ...(await encryptRecordServer(body)),
     },
   })
