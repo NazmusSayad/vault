@@ -179,9 +179,14 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-10"
+                className="relative size-10"
               >
                 <HugeiconsIcon icon={Tag01Icon} className="size-4" />
+                {selectedTags.length > 0 ? (
+                  <span className="bg-primary text-primary-foreground absolute -top-1 -right-1.5 inline-flex min-w-5 items-center justify-center rounded-full px-1 text-xs font-medium">
+                    {selectedTags.length}
+                  </span>
+                ) : null}
               </Button>
             </DropdownMenuTrigger>
 
