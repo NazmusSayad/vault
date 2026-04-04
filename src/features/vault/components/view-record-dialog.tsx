@@ -10,7 +10,12 @@ import { Button } from '@/components/ui/button'
 import { useVaultContext } from '@/features/vault/contexts/vault-context'
 import type { PublicRecordType } from '@/lib/public-schema'
 import { decryptRecordClient } from '@/lib/record-encrypt-client'
-import { CheckmarkCircle03Icon, Copy02Icon } from '@hugeicons/core-free-icons'
+import {
+  CheckmarkCircle03Icon,
+  Copy02Icon,
+  KeyIcon,
+  Tag01Icon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -53,31 +58,12 @@ function ViewRecordDialogContent({ record }: RecordDialogProps) {
 
   const dataFields = Object.entries(decryptQuery.data?.data ?? {})
   const metadataFields = decryptQuery.data?.metadata ?? []
+  const hasTags = record.tags.length > 0 || record.type?.trim()
 
   return (
     <BetterDialogContent
       title={record.name}
-      description={
-        <div className="flex flex-wrap items-center gap-2">
-          {record.type?.trim() ? (
-            <Badge variant="outline" className="rounded-full">
-              {record.type}
-            </Badge>
-          ) : null}
-          {record.tags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="outline"
-              className="rounded-full opacity-60"
-            >
-              {tag}
-            </Badge>
-          ))}
-          <span className="text-muted-foreground text-sm">
-            Updated {new Date(record.updatedAt).toLocaleDateString()}
-          </span>
-        </div>
-      }
+      description={`Updated ${new Date(record.updatedAt).toLocaleDateString()}`}
     >
       {decryptQuery.isPending ? (
         <RecordDialogSkeleton />
@@ -89,26 +75,49 @@ function ViewRecordDialogContent({ record }: RecordDialogProps) {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="space-y-1">
-          <RecordFieldSection fields={dataFields} />
-          <RecordFieldSection fields={metadataFields} />
+        <div className="space-y-6">
+          {hasTags && (
+            <div className="flex flex-wrap items-center gap-2">
+              {record.type?.trim() && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                >
+                  <HugeiconsIcon icon={KeyIcon} className="size-3" />
+                  {record.type}
+                </Badge>
+              )}
+              {record.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
+                >
+                  <HugeiconsIcon icon={Tag01Icon} className="size-3" />
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {dataFields.length > 0 && (
+            <div className="bg-muted/30 divide-border divide-y rounded-lg border">
+              {dataFields.map(([key, value]) => (
+                <FieldRow key={key} label={key} value={value} />
+              ))}
+            </div>
+          )}
+
+          {metadataFields.length > 0 && (
+            <div className="bg-muted/30 divide-border divide-y rounded-lg border">
+              {metadataFields.map(([key, value]) => (
+                <FieldRow key={key} label={key} value={value} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </BetterDialogContent>
-  )
-}
-
-type RecordFieldSectionProps = {
-  fields: [string, string][]
-}
-
-function RecordFieldSection({ fields }: RecordFieldSectionProps) {
-  return (
-    <div className="divide-border divide-y">
-      {fields.map(([key, value]) => (
-        <FieldRow key={key} label={key} value={value} />
-      ))}
-    </div>
   )
 }
 
@@ -121,21 +130,33 @@ function FieldRow({ label, value }: { label: string; value: string }) {
     setTimeout(() => setCopied(false), 1500)
   }
 
+  const isLongValue = value.length > 60
+  const isMultiline = value.includes('\n')
+
   return (
-    <div className="group grid grid-cols-[auto_1fr_auto] items-baseline gap-x-4 gap-y-1 px-4 py-2.5">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="font-mono text-sm break-words whitespace-pre-wrap">
-        {value}
-      </p>
+    <div className="group hover:bg-muted/50 flex items-start gap-3 px-4 py-3 transition-colors">
+      <div className="max-w-[8rem] min-w-[6rem] flex-shrink-0 pt-0.5">
+        <p className="text-muted-foreground text-xs font-medium capitalize">
+          {label}
+        </p>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`text-sm break-all ${isLongValue || isMultiline ? 'font-mono text-xs leading-relaxed' : 'font-medium'} `}
+        >
+          {value}
+        </p>
+      </div>
       <Button
         variant="ghost"
         size="icon"
-        className="text-muted-foreground/60 hover:text-foreground flex size-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+        className="text-muted-foreground/60 hover:text-foreground -mr-1 flex size-7 shrink-0 opacity-0 transition-all group-hover:opacity-100"
         onClick={handleCopy}
+        title="Copy to clipboard"
       >
         <HugeiconsIcon
           icon={copied ? CheckmarkCircle03Icon : Copy02Icon}
-          className="size-3.5"
+          className={copied ? 'size-4 text-green-600' : 'size-4'}
         />
       </Button>
     </div>
@@ -144,16 +165,22 @@ function FieldRow({ label, value }: { label: string; value: string }) {
 
 function RecordDialogSkeleton() {
   return (
-    <div className="divide-border divide-y">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 py-2.5"
-        >
-          <div className="bg-muted h-3 w-16 animate-pulse rounded" />
-          <div className="bg-muted h-4 w-full animate-pulse rounded" />
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="bg-muted h-6 w-20 animate-pulse rounded-full" />
+        <div className="bg-muted h-6 w-16 animate-pulse rounded-full" />
+      </div>
+      <div className="space-y-3">
+        <div className="bg-muted h-4 w-12 animate-pulse rounded" />
+        <div className="bg-muted/30 divide-border divide-y rounded-lg border">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 px-4 py-3">
+              <div className="bg-muted h-3 w-16 animate-pulse rounded" />
+              <div className="bg-muted h-4 w-full animate-pulse rounded" />
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   )
 }
