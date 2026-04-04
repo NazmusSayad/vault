@@ -49,7 +49,7 @@ export function RequestForgetPasswordForm({
               <FormControl>
                 <Input
                   {...field}
-                  type="email"
+                  type="text"
                   placeholder="name@company.com"
                   disabled={form.formState.isSubmitting}
                 />
