@@ -30,8 +30,10 @@ import type { PublicRecordType } from '@/lib/public-schema'
 import { cn } from '@/lib/utils'
 import {
   ArrowRight01Icon,
+  Cancel01Icon,
   FilterIcon,
   Tag01Icon,
+  TagsIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -191,7 +193,22 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Filter tags</DropdownMenuLabel>
+              {selectedTags.length > 0 ? (
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    table.getColumn('tags')?.setFilterValue(undefined)
+                  }}
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
+                  Clear tags filter
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuLabel className="flex items-center gap-2">
+                  <HugeiconsIcon icon={TagsIcon} className="size-4" />
+                  Filter by tags
+                </DropdownMenuLabel>
+              )}
               <DropdownMenuSeparator />
 
               {tagOptions.length === 0 ? (
@@ -219,20 +236,6 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
                   </DropdownMenuCheckboxItem>
                 ))
               )}
-
-              {selectedTags.length > 0 ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault()
-                      table.getColumn('tags')?.setFilterValue(undefined)
-                    }}
-                  >
-                    Clear tags filter
-                  </DropdownMenuItem>
-                </>
-              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
 
