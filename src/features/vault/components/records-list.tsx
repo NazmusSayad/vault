@@ -39,6 +39,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
+import Fuse from 'fuse.js'
 import { useMemo, useState } from 'react'
 import { RecordRow } from './record-row'
 
@@ -107,8 +108,25 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     [records]
   )
 
+  const filteredData = useMemo(() => {
+    const search = globalFilter.trim()
+
+    if (!search) {
+      return data
+    }
+
+    return new Fuse(data, {
+      keys: ['record.name', 'record.type', 'tagsLabel'],
+      threshold: 0.35,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+    })
+      .search(search)
+      .map((result) => result.item)
+  }, [data, globalFilter])
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns: [
       {
         id: 'name',
@@ -157,26 +175,9 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     state: {
       sorting,
       columnFilters,
-      globalFilter,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const search = String(filterValue).trim().toLowerCase()
-
-      if (!search) {
-        return true
-      }
-
-      const name = String(row.getValue('name')).toLowerCase()
-      const type = String(row.getValue('type')).toLowerCase()
-      const tags = String(row.getValue('tags')).toLowerCase()
-
-      return (
-        name.includes(search) || type.includes(search) || tags.includes(search)
-      )
-    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -292,7 +293,15 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
       </div>
 
       <div className="border-border bg-card overflow-hidden rounded-lg border shadow-sm">
-        <Table>
+        <Table className="table-fixed">
+          <colgroup>
+            <col className="w-[34%]" />
+            <col className="w-[18%]" />
+            <col className="w-[16%]" />
+            <col className="w-[24%]" />
+            <col className="w-[8%]" />
+          </colgroup>
+
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
