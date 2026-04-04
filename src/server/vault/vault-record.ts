@@ -83,6 +83,7 @@ export async function getVaultRecordsAction(
           id: true,
           name: true,
           type: true,
+          tags: true,
           createdAt: true,
           updatedAt: true,
         },
