@@ -12,6 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,7 +30,9 @@ import type { PublicRecordType } from '@/lib/public-schema'
 import { cn } from '@/lib/utils'
 import {
   ArrowRight01Icon,
+  BorderNone02Icon,
   Cancel01Icon,
+  FilterIcon,
   Tag01Icon,
   TagsIcon,
 } from '@hugeicons/core-free-icons'
@@ -39,6 +48,7 @@ import {
 } from '@tanstack/react-table'
 import Fuse from 'fuse.js'
 import { useMemo, useState } from 'react'
+import { resolveRecordIcon } from '../constants/record-types'
 import { RecordRow } from './record-row'
 
 export function RecordsList({ records }: { records: PublicRecordType[] }) {
@@ -69,7 +79,7 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     }
 
     return new Fuse(data, {
-      keys: ['record.name', 'tagsLabel'],
+      keys: ['record.name', 'record.type', 'tagsLabel'],
       threshold: 0.35,
       ignoreLocation: true,
     })
@@ -86,9 +96,16 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
         header: 'Name',
       },
       {
-        id: 'lastUpdated',
-        accessorFn: (row) => row.updatedAtTs,
-        header: 'Last updated',
+        id: 'type',
+        accessorFn: (row) => row.record.type?.trim() || 'N/A',
+        header: 'Type',
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) {
+            return true
+          }
+
+          return row.getValue(columnId) === filterValue
+        },
       },
       {
         id: 'tags',
@@ -105,6 +122,11 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
         },
       },
       {
+        id: 'lastUpdated',
+        accessorFn: (row) => row.updatedAtTs,
+        header: 'Last updated',
+      },
+      {
         id: 'actions',
         accessorFn: () => '',
         enableGlobalFilter: false,
@@ -115,6 +137,9 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     state: {
       sorting,
       columnFilters,
+      columnVisibility: {
+        type: false,
+      },
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -123,12 +148,22 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
     getFilteredRowModel: getFilteredRowModel(),
   })
 
+  const typeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(records.map((record) => record.type?.trim() || 'N/A'))
+      ).sort((a, b) => a.localeCompare(b)),
+    [records]
+  )
+
   const tagOptions = useMemo(
     () => Array.from(new Set(data.flatMap((row) => row.tags))).sort(),
     [data]
   )
 
   const tagsFilterValue = table.getColumn('tags')?.getFilterValue()
+  const typeFilterValue =
+    String(table.getColumn('type')?.getFilterValue() ?? 'all') || 'all'
   const selectedTags = Array.isArray(tagsFilterValue)
     ? tagsFilterValue.map((tag) => String(tag))
     : []
@@ -139,7 +174,7 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
         <Input
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Filter by name or tags"
+          placeholder="Filter by name, type, or tags"
           className="w-full sm:max-w-sm"
         />
 
@@ -207,6 +242,35 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Select
+            value={typeFilterValue}
+            onValueChange={(value) => {
+              table
+                .getColumn('type')
+                ?.setFilterValue(value === 'all' ? undefined : value)
+            }}
+          >
+            <SelectTrigger className="h-10 min-w-44">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <HugeiconsIcon icon={FilterIcon} className="size-4" />
+                All types
+              </SelectItem>
+
+              {typeOptions.map((type) => (
+                <SelectItem key={type} value={type}>
+                  <HugeiconsIcon
+                    icon={resolveRecordIcon(type, BorderNone02Icon)}
+                    className="size-4"
+                  />
+                  <span className="uppercase">{type}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -214,8 +278,8 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
         <Table className="table-fixed">
           <colgroup>
             <col className="w-[42%]" />
-            <col className="w-[16%]" />
             <col className="w-[34%]" />
+            <col className="w-[16%]" />
             <col className="w-[8%]" />
           </colgroup>
 
@@ -270,7 +334,7 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
             {table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={table.getAllColumns().length}
+                  colSpan={table.getVisibleLeafColumns().length}
                   className="text-muted-foreground px-4 py-12 text-center text-sm"
                 >
                   No records match your filter.

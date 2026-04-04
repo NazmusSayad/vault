@@ -44,10 +44,6 @@ export function RecordRow({ record }: RecordRowProps) {
           </div>
         </TableCell>
 
-        <TableCell className="text-muted-foreground">
-          {new Date(record.updatedAt).toLocaleDateString()}
-        </TableCell>
-
         <TableCell>
           <div className="flex flex-wrap gap-1.5">
             {record.tags.length === 0 ? (
@@ -65,6 +61,10 @@ export function RecordRow({ record }: RecordRowProps) {
               </Badge>
             ) : null}
           </div>
+        </TableCell>
+
+        <TableCell className="text-muted-foreground">
+          {new Date(record.updatedAt).toLocaleDateString()}
         </TableCell>
 
         <TableCell className="text-right">

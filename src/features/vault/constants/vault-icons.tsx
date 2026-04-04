@@ -37,7 +37,8 @@ export const VAULT_ICONS: Record<string, IconSvgElement> = {
 }
 
 export function resolveVaultIcon(
-  name: string | undefined | null
+  name: string | undefined | null,
+  fallbackIcon: IconSvgElement = FolderLockedIcon
 ): IconSvgElement {
-  return VAULT_ICONS[name ?? ''] || FolderLockedIcon
+  return VAULT_ICONS[name ?? ''] ?? fallbackIcon
 }

@@ -87,9 +87,12 @@ export const RECORD_TYPES: RecordTypeDetails[] = [
   },
 ]
 
-export function resolveRecordIcon(type: string | undefined | null) {
+export function resolveRecordIcon(
+  type: string | undefined | null,
+  fallbackIcon: IconSvgElement = LoginMethodIcon
+) {
   return (
     RECORD_TYPES.find((recordType) => recordType.id === type)?.icon ||
-    LoginMethodIcon
+    fallbackIcon
   )
 }
