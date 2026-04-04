@@ -207,13 +207,13 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
           placeholder="Filter by name, type, or tags"
-          className="h-10 w-full sm:max-w-sm"
+          className="w-full sm:max-w-sm"
         />
 
         <div className="flex flex-wrap items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" className="h-10 min-w-44">
+              <Button type="button" variant="outline" className="min-w-44">
                 {selectedTags.length === 0
                   ? 'Tags'
                   : `Tags (${selectedTags.length})`}

@@ -63,11 +63,16 @@ function ViewRecordDialogContent({ record }: RecordDialogProps) {
             <Badge variant="outline" className="rounded-full">
               {record.type}
             </Badge>
-          ) : (
-            <Badge variant="outline" className="rounded-full opacity-50">
-              No type
+          ) : null}
+          {record.tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="rounded-full opacity-60"
+            >
+              {tag}
             </Badge>
-          )}
+          ))}
           <span className="text-muted-foreground text-sm">
             Updated {new Date(record.updatedAt).toLocaleDateString()}
           </span>
@@ -99,14 +104,9 @@ type RecordFieldSectionProps = {
 
 function RecordFieldSection({ fields }: RecordFieldSectionProps) {
   return (
-    <div>
-      {fields.map(([key, value], index) => (
-        <div key={key}>
-          <FieldRow label={key} value={value} />
-          {index < fields.length - 1 && (
-            <div className="border-border mr-4 ml-14 border-b" />
-          )}
-        </div>
+    <div className="divide-border divide-y">
+      {fields.map(([key, value]) => (
+        <FieldRow key={key} label={key} value={value} />
       ))}
     </div>
   )
@@ -122,33 +122,38 @@ function FieldRow({ label, value }: { label: string; value: string }) {
   }
 
   return (
-    <div className="group px-4 py-3">
-      <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-        {label}
+    <div className="group grid grid-cols-[auto_1fr_auto] items-baseline gap-x-4 gap-y-1 px-4 py-2.5">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-mono text-sm break-words whitespace-pre-wrap">
+        {value}
       </p>
-      <div className="flex items-start justify-between gap-3">
-        <p className="pr-2 text-sm break-words whitespace-pre-wrap">{value}</p>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground flex size-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={handleCopy}
-        >
-          <HugeiconsIcon
-            icon={copied ? CheckmarkCircle03Icon : Copy02Icon}
-            className="size-4"
-          />
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-muted-foreground/60 hover:text-foreground flex size-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+        onClick={handleCopy}
+      >
+        <HugeiconsIcon
+          icon={copied ? CheckmarkCircle03Icon : Copy02Icon}
+          className="size-3.5"
+        />
+      </Button>
     </div>
   )
 }
 
 function RecordDialogSkeleton() {
-  return Array.from({ length: 4 }).map((_, i) => (
-    <div key={i} className="px-4 py-3">
-      <div className="bg-muted mb-2 h-3 w-20 animate-pulse rounded" />
-      <div className="bg-muted h-4 w-full animate-pulse rounded" />
+  return (
+    <div className="divide-border divide-y">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 py-2.5"
+        >
+          <div className="bg-muted h-3 w-16 animate-pulse rounded" />
+          <div className="bg-muted h-4 w-full animate-pulse rounded" />
+        </div>
+      ))}
     </div>
-  ))
+  )
 }
