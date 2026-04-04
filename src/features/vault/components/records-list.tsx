@@ -179,7 +179,7 @@ export function RecordsList({ records }: { records: PublicRecordType[] }) {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="relative size-10"
+                className="relative size-9"
               >
                 <HugeiconsIcon icon={Tag01Icon} className="size-4" />
                 {selectedTags.length > 0 ? (
