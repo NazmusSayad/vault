@@ -1,3 +1,1 @@
-export default function Page() {
-  return <div>page</div>
-}
+export { TermsPage as default } from '@/features/legal/terms-page'

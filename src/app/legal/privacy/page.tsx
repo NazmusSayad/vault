@@ -1,3 +1,1 @@
-export default function Page() {
-  return <div>page</div>
-}
+export { PrivacyPage as default } from '@/features/legal/privacy-page'
