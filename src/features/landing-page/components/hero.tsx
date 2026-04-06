@@ -55,12 +55,6 @@ export function Hero() {
         <Wrapper>
           <div className="grid gap-16 lg:grid-cols-2 lg:gap-8">
             <div className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
-              <div className="mb-6 inline-flex">
-                <span className="bg-primary/10 text-primary border-primary/20 rounded-none border px-2 py-1 font-mono text-xs">
-                  v2.0 — now self-hostable
-                </span>
-              </div>
-
               <h1 className="text-foreground text-5xl leading-[0.95] font-bold tracking-tight sm:text-6xl lg:text-7xl">
                 Encrypted
                 <br />
