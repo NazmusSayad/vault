@@ -162,7 +162,6 @@ export function PrivacyPage() {
             <li>Export your encrypted vault data at any time</li>
             <li>Correct inaccuracies in your account information</li>
             <li>Delete your account and all associated data</li>
-            <li>Receive notification of any data breaches</li>
           </ul>
           <p className="text-muted-foreground mt-3 leading-relaxed">
             To exercise these rights, please contact us through the app or email
@@ -200,9 +199,10 @@ export function PrivacyPage() {
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             We may update this Privacy Policy periodically to reflect changes in
-            our practices or for legal reasons. We will notify you of any
-            material changes via email. Continued use of the service after
-            changes constitutes acceptance of the updated policy.
+            our practices or for legal reasons. We will post any changes on this
+            page and update the last modified date. Continued use of the service
+            after changes constitutes acceptance of the updated policy. It is
+            your responsibility to review this policy periodically.
           </p>
         </section>
 

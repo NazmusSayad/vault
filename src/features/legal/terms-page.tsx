@@ -99,19 +99,7 @@ export function TermsPage() {
 
         <section>
           <h2 className="text-foreground mb-3 text-lg font-semibold">
-            6. Service Availability
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            We strive to maintain 99.9% uptime, but we do not guarantee
-            uninterrupted access to the service. We reserve the right to suspend
-            service for maintenance, updates, or circumstances beyond our
-            control. We will provide advance notice when possible.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-foreground mb-3 text-lg font-semibold">
-            7. Limitation of Liability
+            6. Limitation of Liability
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             To the maximum extent permitted by law, KeyVoid and its operators
@@ -125,7 +113,7 @@ export function TermsPage() {
 
         <section>
           <h2 className="text-foreground mb-3 text-lg font-semibold">
-            8. Termination
+            7. Termination
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             You may terminate your account at any time by deleting your data and
@@ -138,19 +126,20 @@ export function TermsPage() {
 
         <section>
           <h2 className="text-foreground mb-3 text-lg font-semibold">
-            9. Changes to Terms
+            8. Changes to Terms
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            We may update these Terms of Service from time to time. We will
-            notify you of any material changes via email or through the service.
-            Your continued use of KeyVoid after such changes constitutes your
-            acceptance of the new terms.
+            We may update these Terms of Service from time to time. We will post
+            any changes on this page and update the last modified date. Your
+            continued use of KeyVoid after such changes constitutes your
+            acceptance of the new terms. It is your responsibility to review
+            these terms periodically.
           </p>
         </section>
 
         <section>
           <h2 className="text-foreground mb-3 text-lg font-semibold">
-            10. Contact
+            9. Contact
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             If you have any questions about these Terms of Service, please
